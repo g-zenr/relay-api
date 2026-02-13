@@ -17,56 +17,41 @@ Identify what's happening:
 
 ## Step 2 — Check Infrastructure
 ```bash
-# Is the process running?
-curl http://localhost:8000/health
-
-# Check device connectivity
-curl http://localhost:8000/api/v1/relays/device/info
-
-# Check recent logs (if accessible)
-# Look for ERROR and WARNING entries
+# Is the process running? Hit the health endpoint (see project config for URL)
+# Check external resource connectivity via device/info endpoint
+# Check recent logs — look for ERROR and WARNING entries
 ```
 
 ### Common infrastructure issues:
-| Symptom | Likely Cause | Check |
-|---------|-------------|-------|
-| All endpoints return 503 | USB device disconnected | `/health` → `device_connected: false` |
-| Endpoints return 401 | API key misconfigured | Check `RELAY_API_KEY` env var |
-| Endpoints return 429 | Rate limit exceeded | Check `RELAY_RATE_LIMIT` setting |
-| Startup fails | Missing env vars or port conflict | Check `.env` and port availability |
-| Slow responses | Lock contention or device I/O | Check concurrent request count |
+See the Troubleshooting table in the project config for common symptoms, likely causes, and checks.
 
 ## Step 3 — Check Configuration
-Read `app/config.py` and verify env vars are set correctly:
-- `RELAY_MOCK` — is it accidentally `true` in production?
-- `RELAY_VENDOR_ID` / `RELAY_PRODUCT_ID` — do they match the hardware?
-- `RELAY_CHANNELS` — does it match the physical board?
-- `RELAY_API_KEY` — is it set when it should be (or unset when it shouldn't)?
-- `RELAY_RATE_LIMIT` — is it too restrictive?
+Read the config file and verify env vars are set correctly.
+See the Environment Variables table in the project config for all settings and their defaults.
+Common misconfigurations:
+- Mock mode accidentally enabled in production
+- Resource identifiers don't match actual hardware
+- API key not set when it should be
+- Rate limit too restrictive
 
 ## Step 4 — Check Application Logs
 Look for patterns in log output:
-- `relay.audit` entries — are state changes being logged?
-- `WARNING` level — device disconnection, degraded mode
-- `ERROR` level — device communication failures, unhandled exceptions
+- Audit logger entries — are state changes being logged?
+- `WARNING` level — resource disconnection, degraded mode
+- `ERROR` level — communication failures, unhandled exceptions
 - Startup messages — did all components initialize?
 
 ## Step 5 — Reproduce Locally
 ```bash
-# Start in mock mode to isolate hardware vs software issues
-RELAY_MOCK=true python run.py
-
+# Start in mock/dev mode to isolate hardware vs software issues (see dev run command in project config)
 # Hit the failing endpoint
-curl -X PUT http://localhost:8000/api/v1/relays/1 \
-  -H "Content-Type: application/json" \
-  -d '{"state": "on"}'
 ```
-- If it works in mock mode → hardware/driver issue
+- If it works in mock mode → hardware/external resource issue
 - If it fails in mock mode → software bug → switch to `/fix-issue`
 
 ## Step 6 — Resolution
 - If config issue → fix env vars, restart
-- If hardware issue → check USB connection, permissions, drivers
+- If hardware/resource issue → check connection, permissions, drivers
 - If software bug → use `/fix-issue` to fix the code
 - If performance issue → use `/optimize` to profile and fix
 

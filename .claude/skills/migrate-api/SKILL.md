@@ -1,6 +1,6 @@
 ---
 name: migrate-api
-description: Migrate API from one version to the next (v1 → v2) with backwards compatibility (Sofia + Daniel's workflow)
+description: Migrate API from one version to the next with backwards compatibility (Sofia + Daniel's workflow)
 disable-model-invocation: true
 ---
 
@@ -20,56 +20,38 @@ Categorize each change:
 - **Deprecation**: Old behavior still works but is discouraged
 
 ## Step 2 — Design the New Version
-Create the new API version structure:
-```
-app/api/v2/
-├── __init__.py
-├── relays.py      # Updated endpoints
-└── system.py      # Updated system endpoints
-```
+Create the new API version structure in a new version directory under the API layer.
 
 ### Rules:
-- v1 endpoints MUST continue working unchanged
-- v2 endpoints live in a new router with `/api/v2/` prefix
-- Shared logic stays in `app/services/` — NOT duplicated per version
-- New Pydantic models can extend or replace v1 models
+- Previous version endpoints MUST continue working unchanged
+- New version endpoints live in a new router with updated version prefix
+- Shared logic stays in the service layer — NOT duplicated per version
+- New Pydantic models can extend or replace previous models
 
-## Step 3 — Implement v2
-1. Create `app/api/v2/` directory with new router files
-2. Add new Pydantic models to `app/models/schemas.py` (suffix with `V2` if different)
-3. Register the v2 router in `app/main.py`:
-   ```python
-   from app.api.v2.relays import router as relays_v2_router
-   app.include_router(relays_v2_router, prefix="/api/v2")
-   ```
-4. v1 router remains registered and functional
+## Step 3 — Implement New Version
+1. Create new version directory with router files
+2. Add new Pydantic models to the models file (suffix with version if different)
+3. Register the new version router in the app factory
+4. Previous version router remains registered and functional
 
 ## Step 4 — Deprecation Headers
-Add deprecation headers to v1 endpoints:
+Add deprecation headers to previous version endpoints:
 ```python
-from fastapi import Response
-
-@router.get("/relays")
-def get_relays(response: Response, ...):
-    response.headers["Deprecation"] = "true"
-    response.headers["Sunset"] = "2025-12-31"
-    response.headers["Link"] = '</api/v2/relays>; rel="successor-version"'
-    ...
+response.headers["Deprecation"] = "true"
+response.headers["Sunset"] = "<date>"
+response.headers["Link"] = '<new-version-url>; rel="successor-version"'
 ```
 
 ## Step 5 — Tests
-- v1 tests MUST still pass unchanged (backwards compatibility)
-- Write new tests for v2 endpoints in `tests/test_api_v2_relays.py`
-- Test that v1 responses include deprecation headers
+- Previous version tests MUST still pass unchanged (backwards compatibility)
+- Write new tests for new version endpoints in a new test file
+- Test that previous version responses include deprecation headers
 
 ## Step 6 — Documentation
-- Update `README.md` with both v1 and v2 endpoint tables
-- Update OpenAPI description noting v1 deprecation
+- Update project documentation with both version endpoint tables
+- Update OpenAPI description noting deprecation
 - Add migration guide for consumers
 
 ## Step 7 — Verify
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
-ALL tests pass — both v1 and v2.
+Run the test command and the type-check command (see project config).
+ALL tests pass — both versions.

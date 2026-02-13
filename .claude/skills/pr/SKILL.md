@@ -7,10 +7,7 @@ disable-model-invocation: true
 Create a pull request for the current branch: $ARGUMENTS
 
 ## Step 1 — Pre-PR Validation
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 Both MUST pass. Never create a PR with failing tests or type errors.
 
 ## Step 2 — Analyze Changes
@@ -23,32 +20,31 @@ Understand the full scope of changes since branching from main.
 ## Step 3 — Generate PR Title
 - Under 70 characters
 - Use imperative mood: "Add...", "Fix...", "Update..."
-- Be specific: "Add rate limiting middleware" not "Update code"
+- Be specific about what changed
 
 ## Step 4 — Generate PR Body
 Use this structure:
 ```markdown
 ## Summary
 - Bullet point 1: what changed and why
-- Bullet point 2: what changed and why
 - (1-3 bullets max)
 
 ## Changes
 - List every file modified/created/deleted with brief reason
 
 ## Test Plan
-- [ ] All existing tests pass (`pytest tests/ -v`)
-- [ ] Type checking passes (`mypy app/`)
+- [ ] All existing tests pass
+- [ ] Type checking passes
 - [ ] New tests added for: <list new test coverage>
-- [ ] Manual verification: <curl command or steps>
+- [ ] Manual verification: <steps>
 
 ## Checklist
 - [ ] `from __future__ import annotations` in all new files
 - [ ] Typed exceptions (no generic `Exception`)
 - [ ] Pydantic models for all request/response shapes
 - [ ] OpenAPI metadata on all new endpoints
-- [ ] README.md updated (if new endpoints/config)
-- [ ] .env.example updated (if new settings)
+- [ ] Project documentation updated (if new endpoints/config)
+- [ ] Env example file updated (if new settings)
 ```
 
 ## Step 5 — Push and Create PR

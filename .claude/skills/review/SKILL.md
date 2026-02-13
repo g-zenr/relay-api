@@ -9,7 +9,7 @@ Review the code changes using all 6 team persona review checklists.
 2. Read every changed file completely
 
 3. Review as **Alex Rivera** (Hardware/Lead):
-   - Device protocol compliance, typed exceptions, fail-safe behavior, rollback logic
+   - Protocol compliance, typed exceptions, fail-safe behavior, rollback logic
 
 4. Review as **Priya Sharma** (QA/Testing):
    - Test coverage (success/validation/error paths), fixture quality, audit log assertions
@@ -24,7 +24,7 @@ Review the code changes using all 6 team persona review checklists.
    - Env-only config, structured logging, health endpoint, graceful shutdown
 
 8. Review as **Sofia Nakamura** (Product):
-   - OpenAPI metadata, README/docs currency, backwards compatibility
+   - OpenAPI metadata, documentation currency, backwards compatibility
 
 9. Output findings grouped by severity: **Critical**, **High**, **Medium**, **Low**
 10. Include positive feedback for well-implemented patterns

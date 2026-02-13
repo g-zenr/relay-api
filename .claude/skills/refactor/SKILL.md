@@ -8,11 +8,7 @@ Refactor: $ARGUMENTS
 
 Follow Daniel Okoye's architecture standards:
 
-1. **Baseline**: Run tests and type check BEFORE making any changes
-   ```bash
-   python -m pytest tests/ -v --tb=short
-   python -m mypy app/
-   ```
+1. **Baseline**: Run the test and type-check commands (see project config) BEFORE making any changes.
    If either fails, fix existing issues first — never refactor on a broken baseline.
 
 2. **Analyze**: Read the code to be refactored and all its callers
@@ -23,7 +19,7 @@ Follow Daniel Okoye's architecture standards:
 3. **Refactor rules**:
    - Preserve the public API — same function signatures, same return types
    - If renaming, update ALL callers and tests in the same commit
-   - Maintain layer boundaries: `API → Services → Core` — never reverse
+   - Maintain layer boundaries (see Layers in project config) — never reverse dependency flow
    - Keep route handlers thin — if moving logic, move it INTO service layer, not out
    - All service access still via `Depends()` — no direct imports in API layer
    - Keep `from __future__ import annotations` in every file
@@ -36,12 +32,8 @@ Follow Daniel Okoye's architecture standards:
 
 5. **If renaming**:
    - Search entire codebase for old name: source files, tests, config, docs
-   - Update `README.md` if it references renamed items
+   - Update project documentation if it references renamed items
    - Update OpenAPI metadata (summary, description) if endpoints changed
 
-6. **Verify**: Run the same checks as step 1
-   ```bash
-   python -m pytest tests/ -v --tb=short
-   python -m mypy app/
-   ```
+6. **Verify**: Run the test and type-check commands again.
    All tests MUST still pass. No new type errors. No regressions.

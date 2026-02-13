@@ -13,98 +13,26 @@ mkdir -p .github/workflows
 
 ## Step 2 — CI Workflow (tests + type check on every push/PR)
 Create `.github/workflows/ci.yml`:
-
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run tests
-        run: python -m pytest tests/ -v --tb=short
-        env:
-          RELAY_MOCK: "true"
-
-      - name: Type checking
-        run: python -m mypy app/
-```
+- Trigger on push/PR to main
+- Matrix strategy for supported Python versions (see project config)
+- Install dependencies from the requirements file
+- Run the test command with mock/dev mode enabled
+- Run the type-check command
 
 ## Step 3 — Docker Build Workflow (verify Dockerfile on every PR)
 Create `.github/workflows/docker.yml`:
-
-```yaml
-name: Docker Build
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t relay-api:test .
-
-      - name: Test Docker image
-        run: |
-          docker run -d --name test-relay -e RELAY_MOCK=true -p 8000:8000 relay-api:test
-          sleep 5
-          curl -f http://localhost:8000/health || exit 1
-          docker stop test-relay
-```
+- Trigger on PR to main
+- Build the Docker image using the Docker build command (see project config)
+- Run the container with mock/dev mode enabled
+- Verify the health endpoint responds
 
 ## Step 4 — Release Workflow (on tag push)
 Create `.github/workflows/release.yml`:
-
-```yaml
-name: Release
-
-on:
-  push:
-    tags: ["v*"]
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-```
+- Trigger on tag push matching `v*`
+- Create GitHub Release with auto-generated release notes
 
 ## Step 5 — Add CI Badge to README
-```markdown
-[![CI](https://github.com/<owner>/relay-api/actions/workflows/ci.yml/badge.svg)](https://github.com/<owner>/relay-api/actions/workflows/ci.yml)
-```
+Add the CI workflow badge to the project README.
 
 ## Step 6 — Verify
 ```bash
@@ -115,7 +43,7 @@ git push
 Check the Actions tab on GitHub to verify the workflow runs.
 
 ## Rules
-- Always test with `RELAY_MOCK=true` in CI (no hardware)
-- Test on multiple Python versions (3.11, 3.12)
+- Always test with mock/dev mode enabled in CI (no hardware)
+- Test on multiple Python versions per project config
 - Docker build test ensures Dockerfile stays valid
 - Never store secrets in workflow files — use GitHub Secrets

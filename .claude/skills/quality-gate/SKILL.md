@@ -7,11 +7,7 @@ disable-model-invocation: true
 Run the full quality gate before merging. This orchestrates multiple checks into a single pass/fail verdict.
 
 ## Gate 1 — Verification (automated)
-Run the full test and type-check pipeline:
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 - **PASS**: All tests green, zero type errors
 - **FAIL**: Any test failure or type error → stop here, fix first
 
@@ -19,21 +15,20 @@ python -m mypy app/
 Check the codebase for structural issues:
 
 ### Layer Violations
-- Search for imports that violate `API → Services → Core` direction
-- No `app/core/` importing from `app/api/` or `app/services/`
-- No `app/services/` importing from `app/api/`
+- Search for imports that violate the dependency flow (see Layers in project config)
+- No lower layer importing from a higher layer
 
 ### Dead Code
-- Search for unused imports across `app/`
+- Search for unused imports across the source root
 - Search for functions/methods with zero callers
 - Check for commented-out code blocks (remove or restore)
 
 ### Concurrency
-- Verify all device access is wrapped in `self._lock` in `RelayService`
-- Verify no race conditions in middleware state (rate limiter counters)
+- Verify all external resource access is wrapped in the lock mechanism in the service class
+- Verify no race conditions in middleware state
 
 ### Observability
-- Verify all state changes produce `relay.audit` log entries
+- Verify all state changes produce audit log entries
 - Verify startup/shutdown events are logged
 - Verify structured log format is consistent
 
@@ -41,16 +36,16 @@ Check the codebase for structural issues:
 Quick security pass:
 - [ ] `hmac.compare_digest()` used for all secret comparisons
 - [ ] No secrets in error responses (grep for stack trace patterns)
-- [ ] No secrets logged at any level (grep for `api_key` in log statements)
+- [ ] No secrets logged at any level
 - [ ] Auth enforced on all state-changing endpoints when API key is configured
 - [ ] Input validation via Pydantic on all endpoints
 - [ ] Rate limiting functional when configured
 
 ## Gate 4 — Documentation Currency
-- [ ] `README.md` API table matches actual routes
-- [ ] `.env.example` matches all `Settings` fields
+- [ ] Project documentation API table matches actual routes
+- [ ] Env example file matches all Settings fields
 - [ ] OpenAPI metadata present on every endpoint
-- [ ] `from __future__ import annotations` in every `app/` source file
+- [ ] `from __future__ import annotations` in every source file
 
 ## Verdict
 

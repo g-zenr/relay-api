@@ -9,16 +9,13 @@ Audit and manage project dependencies: $ARGUMENTS
 If no specific action requested, run the full audit.
 
 ## Step 1 — Read Current Dependencies
-```bash
-cat requirements.txt
-```
-List all packages with their current version constraints.
+Read the requirements file. List all packages with their current version constraints.
 
 ## Step 2 — Check Installed Versions
 ```bash
 pip list --format=columns
 ```
-Compare installed versions against requirements.txt constraints.
+Compare installed versions against requirements constraints.
 
 ## Step 3 — Vulnerability Scan
 ```bash
@@ -42,19 +39,15 @@ For each outdated package, report:
 
 ## Step 5 — Compatibility Check
 For any proposed upgrades:
-- Check if the new version still supports Python 3.12
+- Check if the new version supports the project's Python version
 - Check for known incompatibilities between upgraded packages
-- Verify FastAPI/Pydantic/uvicorn version compatibility
+- Verify framework version compatibility
 
 ## Step 6 — Apply Upgrades (if requested)
 If user asked to upgrade:
-1. Update version constraints in `requirements.txt`
-2. Install updated packages: `pip install -r requirements.txt`
-3. Run verification:
-   ```bash
-   python -m pytest tests/ -v --tb=short
-   python -m mypy app/
-   ```
+1. Update version constraints in the requirements file
+2. Install updated packages
+3. Run the test and type-check commands (see project config)
 4. If tests fail after upgrade, identify which package caused the failure and roll back that specific upgrade
 
 ## Output Format

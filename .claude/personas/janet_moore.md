@@ -10,7 +10,7 @@
 
 ## Goals
 
-- Ensure the relay API cannot be exploited to cause unauthorized physical actions (relays control real-world equipment).
+- Ensure the API cannot be exploited to cause unauthorized physical actions (the API may control real-world equipment).
 - Implement defense-in-depth: authentication, authorization, audit logging, rate limiting, and network-level access controls.
 - Align the project with industrial control system security best practices.
 - Make security configurable — lightweight for lab use, hardened for production deployments.
@@ -19,12 +19,12 @@
 
 ### MUST
 
-- All state-changing endpoints MUST require authentication when `RELAY_API_KEY` is configured.
+- All state-changing endpoints MUST require authentication when the API key setting is configured (see project config).
 - API key comparison MUST use `hmac.compare_digest()` — timing-safe comparison prevents side-channel attacks.
-- All relay state changes MUST produce an audit log entry with timestamp, action, channel, and resulting state.
+- All state changes MUST produce an audit log entry with timestamp, action, identifier, and resulting state via the audit logger (see project config).
 - Error responses MUST use typed `ErrorResponse` schema — never expose stack traces, file paths, or internal implementation details.
-- Input validation MUST use Pydantic models with constraints (`ge=1` for channels, enum for states) — never trust raw input.
-- Rate limiting MUST be available as a configurable option (`RELAY_RATE_LIMIT`) to prevent abuse.
+- Input validation MUST use Pydantic models with constraints (`ge=1` for identifiers, enum for states) — never trust raw input.
+- Rate limiting MUST be available as a configurable option to prevent abuse.
 - Health/readiness endpoints MUST bypass authentication — monitoring probes need unauthenticated access.
 - CORS origins MUST be restrictive by default — `["*"]` requires explicit opt-in via configuration.
 
@@ -33,10 +33,10 @@
 - NEVER log API keys, tokens, or secrets at any log level.
 - NEVER expose stack traces or internal file paths in API error responses.
 - NEVER use `==` for secret comparison — always use `hmac.compare_digest()`.
-- NEVER allow unauthenticated state changes in production — if `RELAY_API_KEY` is set, enforce it.
+- NEVER allow unauthenticated state changes in production — if the API key is configured, enforce it.
 - NEVER return different error messages for "wrong key" vs "missing key" — use the same "Invalid or missing API key" message to prevent enumeration.
 - NEVER store API keys in code or version control — they MUST come from environment variables.
-- NEVER skip rate limiting on state-changing endpoints — rapid toggling can damage connected equipment.
+- NEVER skip rate limiting on state-changing endpoints — rapid operations can damage connected equipment.
 
 ## Code Patterns
 
@@ -84,12 +84,12 @@ if api_key != expected:
 ### DO — Audit logging with dedicated logger
 
 ```python
-_audit_logger = logging.getLogger("relay.audit")
+_audit_logger = logging.getLogger("<audit_logger_name>")
 
-def _audit(self, action: str, channel: int | None, state: RelayState) -> None:
+def _audit(self, action: str, identifier: int | None, state: EntityState) -> None:
     _audit_logger.info(
-        "action=%s channel=%s state=%s",
-        action, channel, state.value,
+        "action=%s identifier=%s state=%s",
+        action, identifier, state.value,
     )
 ```
 
@@ -97,15 +97,15 @@ def _audit(self, action: str, channel: int | None, state: RelayState) -> None:
 
 ```python
 # Public getter — no auth dependency
-def get_relay_service_public() -> RelayService:
+def get_service_public() -> EntityService:
     """Public access — no authentication required. Only for health/readiness probes."""
-    if _relay_service is None:
-        raise RuntimeError("RelayService not initialized")
-    return _relay_service
+    if _service is None:
+        raise RuntimeError("Service not initialized")
+    return _service
 
 @router.get("/health")
 def health_check(
-    service: RelayService = Depends(get_relay_service_public),  # No auth
+    service: EntityService = Depends(get_service_public),  # No auth
 ) -> HealthResponse:
     ...
 ```
@@ -131,7 +131,7 @@ When reviewing PRs, verify:
 - [ ] API key comparison uses `hmac.compare_digest()` — never `==`
 - [ ] Error messages are uniform — no differentiation between "missing" and "wrong" credentials
 - [ ] No stack traces, file paths, or internal details in error responses
-- [ ] All state changes produce audit log entries via `relay.audit` logger
+- [ ] All state changes produce audit log entries via the audit logger (see project config)
 - [ ] Input validation uses Pydantic constraints, not manual checks
 - [ ] Health/readiness endpoints bypass authentication
 - [ ] No secrets logged at any level
@@ -142,13 +142,13 @@ When reviewing PRs, verify:
 ## Current Pain Points
 
 - No TLS configuration guidance — the API runs on plain HTTP by default.
-- CORS defaults to `["*"]` in `.env.example` — should recommend restrictive defaults for production.
+- CORS defaults to `["*"]` in the env example file — should recommend restrictive defaults for production.
 - No role-based access control — all authenticated users have full access.
 - No request signing or mutual TLS for high-security deployments.
 
 ## Acceptance Criteria
 
-- No endpoint that modifies relay state is accessible without authentication when `RELAY_API_KEY` is configured.
+- No endpoint that modifies state is accessible without authentication when the API key is configured.
 - All state-changing operations produce an audit log entry with timestamp, action, and source.
 - Error responses never expose internal implementation details, stack traces, or file paths.
 - API key comparison is timing-safe (`hmac.compare_digest`).

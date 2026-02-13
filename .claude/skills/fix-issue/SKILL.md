@@ -19,45 +19,38 @@ def test_reproduces_issue(self, client: TestClient) -> None:
     resp = client.<method>("<path>", ...)
     # This should reproduce the error
 ```
-Run it to confirm it fails:
-```bash
-python -m pytest tests/<file>.py::<TestClass>::<test_method> -v --tb=long
-```
+Run it to confirm it fails.
 
 ## Step 3 — Diagnose
-Trace the error through the architecture layers:
-1. **API layer** (`app/api/v1/`) — Route handler, request parsing, DI
-2. **Dependencies** (`app/api/dependencies.py`) — Auth, service injection
-3. **Service layer** (`app/services/relay_service.py`) — Business logic, thread safety
-4. **Core layer** (`app/core/device.py`) — Device communication, HID protocol
-5. **Config** (`app/config.py`) — Settings, environment variables
+Trace the error through the architecture layers (see Layers in project config):
+1. **API layer** — Route handler, request parsing, DI
+2. **Dependencies** — Auth chain, service injection
+3. **Service layer** — Business logic, thread safety
+4. **Core layer** — External resource communication, protocol
+5. **Config** — Settings, environment variables
 
 For each layer, ask:
 - Is the input valid at this point?
 - Is the exception caught or propagated correctly?
 - Is thread safety maintained?
-- Is the device state consistent?
+- Is the state consistent?
 
 ### Common root causes:
-- **Device errors**: Device not open, invalid channel
-- **Auth errors**: API key misconfigured, missing `hmac.compare_digest`
-- **State errors**: `_states` dict out of sync with actual device state
-- **Thread errors**: `_lock` not held during device access
+- **Resource errors**: External resource not open, invalid identifier
+- **Auth errors**: API key misconfigured, missing timing-safe comparison
+- **State errors**: State dict out of sync with actual resource state
+- **Thread errors**: Lock not held during resource access
 - **Config errors**: Env var not set or wrong type
 
 ## Step 4 — Fix
-- Fix in the correct layer (device → service → API)
+- Fix in the correct layer (core → service → API)
 - Use typed exceptions, not generic `Exception`
 - Maintain thread safety if touching service layer
-- Rollback semantics if touching multi-channel operations
+- Rollback semantics if touching multi-entity operations
 
 ## Step 5 — Verify
 - The reproduction test MUST now pass
-- Run full suite:
-  ```bash
-  python -m pytest tests/ -v --tb=short
-  python -m mypy app/
-  ```
+- Run the test command and the type-check command (see project config)
 
 ## Step 6 — Audit
 - Are there similar patterns elsewhere that have the same bug?

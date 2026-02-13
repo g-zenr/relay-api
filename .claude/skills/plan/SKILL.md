@@ -9,7 +9,7 @@ Plan the following scope: $ARGUMENTS
 ## Step 1 — Understand the Scope
 - Read the request and identify all deliverables
 - Read the existing codebase to understand what exists and what's new
-- Identify which layers are affected: Core, Service, API, Tests, Config, Docs
+- Identify which layers are affected (see Layers in project config)
 
 ## Step 2 — Break Into Stories
 Each story is a vertical slice of functionality that can be independently delivered and demonstrated.
@@ -23,11 +23,10 @@ Format each story as:
 
 **Acceptance Criteria:**
 - [ ] <specific, testable criterion>
-- [ ] <specific, testable criterion>
 
 **Files Affected:**
-- `app/...` — <what changes>
-- `tests/...` — <what tests needed>
+- <layer/file> — <what changes>
+- <test file> — <what tests needed>
 
 **Estimated Complexity:** Small / Medium / Large
 ```
@@ -41,11 +40,11 @@ Format each story as:
 Each story should have 2-6 concrete tasks:
 ```markdown
 **Tasks:**
-1. [ ] Add Pydantic models to `app/models/schemas.py`
-2. [ ] Add service method to `app/services/relay_service.py`
-3. [ ] Add API endpoint to `app/api/v1/relays.py`
+1. [ ] Add Pydantic models to the models file
+2. [ ] Add service method to the service layer
+3. [ ] Add API endpoint to the appropriate router
 4. [ ] Write tests (success, validation, error paths)
-5. [ ] Update README.md and .env.example
+5. [ ] Update project documentation and env example file
 6. [ ] Run /verify and /review
 ```
 
@@ -53,7 +52,7 @@ Each story should have 2-6 concrete tasks:
 For each story, identify:
 - **Technical risks** — unknown APIs, complex logic, concurrency concerns
 - **Dependencies** — external libraries, config changes, breaking changes
-- **Testing complexity** — needs mock devices, hardware, special fixtures
+- **Testing complexity** — needs mock implementations, special fixtures
 
 ## Step 6 — Output Sprint Plan
 ```markdown
@@ -67,7 +66,6 @@ For each story, identify:
 ## Story Order (dependency-aware)
 1. Story A (no dependencies)
 2. Story B (depends on A)
-3. Story C (parallel with B)
 
 ## Stories
 <full story details from Step 2>

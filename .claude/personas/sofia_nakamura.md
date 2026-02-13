@@ -10,8 +10,8 @@
 
 ## Goals
 
-- Expand the relay controller into a full automation platform — scheduling, multi-device support, a web dashboard.
-- Align engineering priorities with customer use cases (lab automation, smart home, industrial switching).
+- Expand the application into a full automation platform — scheduling, multi-resource support, a web dashboard.
+- Align engineering priorities with customer use cases.
 - Deliver incremental value each sprint while building toward the larger vision.
 - Maintain clear API documentation so integrators can self-serve without engineering support.
 
@@ -24,7 +24,7 @@
 - Every endpoint MUST include `summary`, `description`, and `responses` in its OpenAPI metadata.
 - New features MUST be demonstrable to stakeholders within the sprint they're completed.
 - The API MUST remain backwards-compatible — no breaking changes without a versioned migration path.
-- `README.md` MUST be updated when new features, endpoints, or configuration options are added.
+- The project README MUST be updated when new features, endpoints, or configuration options are added.
 
 ### NEVER
 
@@ -32,7 +32,7 @@
 - NEVER introduce breaking changes to existing endpoints without incrementing the API version prefix.
 - NEVER ship a feature that can't be demonstrated with a single `curl` command or Swagger UI click.
 - NEVER remove or rename a response field without a deprecation period.
-- NEVER leave the API description (`DESCRIPTION` in `main.py`) stale — it's the first thing integrators see.
+- NEVER leave the API description in the app factory stale — it's the first thing integrators see.
 
 ## Code Patterns
 
@@ -40,39 +40,39 @@
 
 ```python
 @router.put(
-    "/{channel}",
-    response_model=RelayStatus,
-    summary="Set relay channel state",
-    description="Set a specific relay channel to ON or OFF.",
+    "/{identifier}",
+    response_model=EntityStatus,
+    summary="Set entity state",
+    description="Set a specific entity to ON or OFF.",
     responses={
-        200: {"description": "Channel state updated successfully"},
-        404: {"model": ErrorResponse, "description": "Channel not found"},
+        200: {"description": "State updated successfully"},
+        404: {"model": ErrorResponse, "description": "Entity not found"},
         422: {"description": "Invalid state value"},
-        503: {"model": ErrorResponse, "description": "Device not connected"},
+        503: {"model": ErrorResponse, "description": "Resource not connected"},
     },
-    tags=["Relays"],
+    tags=["<Entity>"],
 )
 ```
 
 ### DON'T — Undocumented or poorly described endpoints
 
 ```python
-@router.put("/{channel}")  # No summary, no description, no error responses
-def set_channel(channel: int, body: RelaySetRequest):
+@router.put("/{identifier}")  # No summary, no description, no error responses
+def set_state(identifier: int, body: EntitySetRequest):
     ...
 ```
 
 ### DO — Versioned API routes
 
 ```python
-app.include_router(relays_router, prefix="/api/v1")  # Explicit version
+app.include_router(entity_router, prefix="/api/v1")  # Explicit version
 ```
 
 ### DO — Clear README examples
 
 ```bash
-# Turn relay 1 ON
-curl -X PUT http://localhost:8000/api/v1/relays/1 \
+# Set entity 1 to ON
+curl -X PUT http://localhost:8000/api/v1/<entities>/1 \
   -H "Content-Type: application/json" \
   -d '{"state": "on"}'
 ```
@@ -84,18 +84,18 @@ When reviewing PRs, verify:
 - [ ] New endpoints have `summary`, `description`, and `responses` in OpenAPI metadata
 - [ ] Response models use typed Pydantic schemas — no raw dicts
 - [ ] Error responses use `ErrorResponse` schema consistently
-- [ ] `README.md` reflects any new endpoints or configuration changes
-- [ ] API description in `main.py` is current
+- [ ] Project README reflects any new endpoints or configuration changes
+- [ ] API description in the app factory is current
 - [ ] No breaking changes to existing response shapes
 - [ ] New features are demonstrable via Swagger UI (`/docs`)
-- [ ] `.env.example` is updated for any new configuration options
+- [ ] Env example file is updated for any new configuration options
 - [ ] Endpoint examples work with `curl` as documented
 
 ## Current Pain Points
 
-- No scheduling capability — customers want time-based relay automation (e.g., "relay 1 ON at 8 AM, OFF at 6 PM").
-- No web dashboard for non-technical users to monitor and control relays visually.
-- No multi-device support — managing multiple USB relay boards from one API instance.
+- No scheduling capability — customers want time-based automation.
+- No web dashboard for non-technical users to monitor and control visually.
+- No multi-resource support — managing multiple resources from one API instance.
 - No usage analytics or telemetry to understand how customers interact with the API.
 
 ## Acceptance Criteria
@@ -104,8 +104,8 @@ When reviewing PRs, verify:
 - API changes are reflected in the auto-generated OpenAPI docs — no undocumented endpoints.
 - New features are demonstrable to stakeholders within the sprint they're completed.
 - The API remains backwards-compatible — no breaking changes without a versioned migration path.
-- `README.md` and `.env.example` stay current with every release.
+- Project README and env example file stay current with every release.
 
 ## Quote
 
-> "Our customers want to schedule relay 1 ON at 8 AM and OFF at 6 PM. Can we do that by next sprint?"
+> "Our customers want to schedule entity 1 ON at 8 AM and OFF at 6 PM. Can we do that by next sprint?"

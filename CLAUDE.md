@@ -1,33 +1,21 @@
 # Relay API — Claude Code Instructions
 
+@.claude/PROJECT.md
+
 REST API for controlling DCT Tech USB relay modules via HID. FastAPI + Python 3.12.
 
 ## Commands
 
 ```bash
-# Run tests (use this to verify changes)
-python -m pytest tests/ -v --tb=short
-
-# Type checking
-python -m mypy app/
-
-# Run the app (mock mode)
-RELAY_MOCK=true python run.py
+python -m pytest tests/ -v --tb=short   # Run tests
+python -m mypy app/                      # Type check
+RELAY_MOCK=true python run.py            # Run app (dev)
 ```
 
 ## Architecture
 
-```
-app/core/device.py    → RelayDevice protocol + HID/Mock implementations (hardware layer)
-app/services/         → RelayService: thread-safe business logic + audit logging
-app/api/              → FastAPI routes, DI, auth (thin handlers only)
-app/models/schemas.py → Pydantic request/response models
-app/config.py         → Pydantic BaseSettings with RELAY_ prefix
-app/middleware.py     → Rate limiting middleware
-tests/                → pytest tests mirroring app/ structure
-```
-
 Dependency flow: `API → Services → Core`. Never reverse this direction.
+See `@.claude/PROJECT.md` for full layer mapping, key abstractions, and file paths.
 
 ## Coding Standards
 
@@ -38,28 +26,28 @@ These apply to ALL code in this project. Violations block PR merges.
 - `from __future__ import annotations` in EVERY source file
 - All functions MUST have return type annotations
 - All Pydantic models MUST use explicit field types — no `Any`
-- Run `mypy app/` — must pass clean with zero errors
+- Run type checker — must pass clean with zero errors
 
-### Device Layer (`app/core/`)
+### Core Layer
 
-- All device implementations MUST satisfy the `RelayDevice` Protocol
-- Device errors MUST raise typed exceptions: `DeviceNotFoundError`, `DeviceConnectionError`, `InvalidChannelError`
+- All implementations MUST satisfy the primary protocol/interface
+- Errors MUST raise typed exceptions from the exception hierarchy (see project config)
 - NEVER catch and swallow exceptions silently — log and re-raise
-- `MockRelayDevice` MUST mirror real device behavior (same exceptions, same state transitions)
+- Mock implementation MUST mirror real behavior (same exceptions, same state transitions)
 
-### Service Layer (`app/services/`)
+### Service Layer
 
 - Thread safety via `threading.Lock()` — all device access is serialized
 - Multi-channel operations MUST rollback completed channels on partial failure
-- All state changes MUST produce audit log entries via the `relay.audit` logger
-- `all_off()` MUST run on both startup and shutdown — fail-safe is non-negotiable
+- All state changes MUST produce audit log entries via the audit logger
+- Fail-safe operation MUST run on both startup and shutdown — non-negotiable
 
-### API Layer (`app/api/`)
+### API Layer
 
-- Route handlers MUST be thin — delegate business logic to `RelayService`
+- Route handlers MUST be thin — delegate business logic to the service class
 - All service access via `Depends()` injection — never import service instances directly
 - All endpoints use typed Pydantic `response_model` — no raw dicts
-- Error responses use `ErrorResponse` schema — never expose stack traces or file paths
+- Error responses use the error response model — never expose stack traces or file paths
 - Static routes before parameterized routes to avoid path conflicts
 - Every endpoint MUST have `summary`, `description`, and `responses` in OpenAPI metadata
 
@@ -67,24 +55,24 @@ These apply to ALL code in this project. Violations block PR merges.
 
 - API key comparison uses `hmac.compare_digest()` — NEVER use `==` for secrets
 - Auth error messages are uniform: "Invalid or missing API key" — no differentiation
-- Health endpoint bypasses auth (uses `get_relay_service_public`)
+- Health endpoint bypasses auth (uses public DI dependency)
 - NEVER log API keys or secrets at any log level
 - Input validation via Pydantic constraints (`ge=1`, enums) — never trust raw input
 
 ### Configuration
 
-- All config via env vars with `RELAY_` prefix in `app/config.py`
+- All config via env vars with the project's env prefix in the config file
 - NEVER hardcode host, port, device IDs, or feature flags
 - NEVER use `input()` or `print()` — the app runs headless
-- `.env.example` MUST document every env var with its default and purpose
+- Env example file MUST document every env var with its default and purpose
 
 ### Testing
 
 - Every endpoint needs three test paths: success, validation error, device error
 - Test fixtures use DI overrides via `app.dependency_overrides` — proper cleanup in teardown
-- Audit log tests use `caplog` on `relay.audit` logger
+- Audit log tests use `caplog` on the audit logger
 - Tests MUST be deterministic — no sleep, no execution order dependence
-- Run `pytest tests/ -v --tb=short` after every change — all tests must pass
+- Run test command after every change — all tests must pass
 
 ## Team Personas
 

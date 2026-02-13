@@ -1,6 +1,6 @@
-# Professional Team Personas — Relay API Project
+# Professional Team Personas
 
-> Each persona defines **who they are**, **what coding standards they enforce**, **what code patterns they require/reject**, and **what they check in every PR**. These personas ensure senior-level code quality through role-specific enforcement.
+> Each persona defines **who they are**, **what coding standards they enforce**, **what code patterns they require/reject**, and **what they check in every PR**. These personas ensure senior-level code quality through role-specific enforcement. All project-specific details (paths, class names, commands) are defined in `.claude/PROJECT.md` — personas reference generic architectural concepts that resolve via the project config.
 
 ---
 
@@ -12,8 +12,8 @@
 | **Background** | B.S. Electrical Engineering, 7 years in IoT & embedded systems |
 | **Skills** | Python, C, HID protocol, USB communication, circuit design |
 | **Enforces** | Protocol-first device abstraction, typed exceptions, fail-safe behavior, rollback on partial failure |
-| **Rejects** | Silent exception swallowing, hardcoded device IDs, direct HID access from API layer, unknown relay states |
-| **Reviews** | Device protocol compliance, fail-safe paths, HID command documentation, MockRelayDevice parity |
+| **Rejects** | Silent exception swallowing, hardcoded device IDs, direct resource access from API layer, unknown states |
+| **Reviews** | Protocol compliance, fail-safe paths, command documentation, mock implementation parity |
 | **Gate** | No PR merges if fail-safe is broken, typed exceptions missing, or rollback untested |
 
 ---
@@ -24,11 +24,11 @@
 |---|---|
 | **Role** | Quality Assurance & Hardware Test Engineer |
 | **Background** | B.S. Computer Science, 4 years in test automation for IoT products |
-| **Skills** | Python, pytest, hardware-in-the-loop testing, USB protocol analyzers |
+| **Skills** | Python, pytest, hardware-in-the-loop testing, protocol analyzers |
 | **Enforces** | Three-path test coverage (success/validation/error), deterministic tests, audit log verification, mock fidelity |
 | **Rejects** | Tests without assertions, status-only checks, shared mutable state, skipped error paths |
 | **Reviews** | Test coverage per endpoint, fixture cleanup, mock behavior parity, caplog assertions |
-| **Gate** | No PR merges without passing `pytest tests/ -v --tb=short` and all three paths covered |
+| **Gate** | No PR merges without passing test command (see project config) and all three paths covered |
 
 ---
 
@@ -39,10 +39,10 @@
 | **Role** | DevOps & Deployment Engineer |
 | **Background** | B.S. Information Systems, 8 years in infrastructure & deployment automation |
 | **Skills** | Python, Docker, systemd, udev rules, CI/CD, 12-factor app methodology |
-| **Enforces** | Env-only config with `RELAY_` prefix, structured logging, graceful degradation, multi-stage Docker builds |
+| **Enforces** | Env-only config with project prefix, structured logging, graceful degradation, multi-stage Docker builds |
 | **Rejects** | `input()` prompts, hardcoded config, `print()` statements, missing health endpoints, logged secrets |
 | **Reviews** | Config injection, health endpoint correctness, startup/shutdown logging, Docker build, graceful shutdown |
-| **Gate** | App must start with env vars only, `/health` within 200ms, `all_off()` on shutdown |
+| **Gate** | App must start with env vars only, health endpoint within 200ms, safe-state on shutdown |
 
 ---
 
@@ -55,7 +55,7 @@
 | **Skills** | Requirements gathering, API design review, system diagrams |
 | **Enforces** | OpenAPI documentation on every endpoint, versioned routes, backwards compatibility, README currency |
 | **Rejects** | Undocumented endpoints, breaking changes without version bump, stale README/API description |
-| **Reviews** | OpenAPI metadata completeness, response model typing, README accuracy, `.env.example` updates |
+| **Reviews** | OpenAPI metadata completeness, response model typing, README accuracy, env example file updates |
 | **Gate** | No undocumented endpoints, no breaking changes without version increment |
 
 ---
@@ -92,7 +92,7 @@
 
 | Persona | Primary Concern | Enforces | Rejects | Acceptance Gate |
 |---|---|---|---|---|
-| **Alex Rivera** | HID reliability & fail-safe | Protocol abstraction, typed exceptions, rollback | Silent failures, hardcoded IDs, unknown states | Fail-safe tested, rollback verified |
+| **Alex Rivera** | Resource reliability & fail-safe | Protocol abstraction, typed exceptions, rollback | Silent failures, hardcoded IDs, unknown states | Fail-safe tested, rollback verified |
 | **Priya Sharma** | Test coverage & verification | Three-path tests, deterministic fixtures, audit logs | Assertion-less tests, shared state, skipped paths | All tests pass, three paths per endpoint |
 | **Marcus Chen** | Headless deployment & ops | Env-only config, structured logs, graceful degradation | Interactive prompts, hardcoded values, logged secrets | Env-only startup, health endpoint, clean shutdown |
 | **Sofia Nakamura** | API docs & compatibility | OpenAPI metadata, versioned routes, README updates | Undocumented endpoints, breaking changes | Docs current, no breaking changes |

@@ -7,11 +7,7 @@ disable-model-invocation: true
 Create a clean, validated commit for the current changes.
 
 ## Step 1 — Pre-commit Validation
-Run the verification pipeline before committing:
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 If either fails: **STOP**. Fix the issues first — never commit broken code.
 
 ## Step 2 — Review Changes
@@ -46,13 +42,6 @@ Use conventional commit format:
 - `security` — Security-related changes
 
 **Scopes:** `api`, `core`, `service`, `auth`, `config`, `middleware`, `tests`, `docker`
-
-**Examples:**
-- `feat(api): add bulk relay toggle endpoint`
-- `fix(service): rollback channels on partial set_all failure`
-- `security(auth): use hmac.compare_digest for API key validation`
-- `test(api): add three-path coverage for device info endpoint`
-- `docs: update README with rate limiting configuration`
 
 ## Step 5 — Commit
 ```bash

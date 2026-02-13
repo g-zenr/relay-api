@@ -1,51 +1,42 @@
 ---
 name: add-device
-description: Add a new relay device implementation (Alex Rivera's workflow)
+description: Add a new implementation of the primary protocol/interface (Alex Rivera's workflow)
 disable-model-invocation: true
 ---
 
-Add a new relay device implementation: $ARGUMENTS
+Add a new implementation of the primary protocol/interface: $ARGUMENTS
 
 Follow Alex Rivera's hardware integration standards:
 
-1. **Study the protocol**: Read `app/core/device.py` to understand the `RelayDevice` Protocol:
-   ```python
-   class RelayDevice(Protocol):
-       def open(self) -> None: ...
-       def close(self) -> None: ...
-       def set_channel(self, channel: int, on: bool) -> None: ...
-       def get_info(self) -> dict[str, str]: ...
-       @property
-       def is_open(self) -> bool: ...
-   ```
+1. **Study the protocol**: Read the primary protocol/interface definition in the core layer (see Key Abstractions and Protocol Methods in project config)
 
-2. **Implement the device class** in `app/core/device.py`:
-   - MUST satisfy `RelayDevice` Protocol — verify with `isinstance(device, RelayDevice)`
+2. **Implement the class** in the core layer file:
+   - MUST satisfy the primary protocol/interface
    - `from __future__ import annotations` at top of file
    - All methods MUST have return type annotations
-   - Document HID command bytes with hex values in comments
-   - Raise `DeviceNotFoundError` if device not detected on `open()`
-   - Raise `DeviceConnectionError` on communication failures
+   - Document protocol-specific commands with clear comments
+   - Raise the discovery error exception if resource not detected on `open()`
+   - Raise the connection error exception on communication failures
    - Track `is_open` state accurately
    - `close()` MUST be idempotent — safe to call multiple times
 
 3. **Update config** if new settings are needed:
-   - Add to `app/config.py` Settings class with `RELAY_` prefix
-   - Document in `.env.example` with defaults and description
+   - Add to the config file's Settings class with the project's env prefix
+   - Document in the env example file with defaults and description
 
-4. **Update MockRelayDevice** to mirror any new behavior:
+4. **Update the mock implementation** to mirror any new behavior:
    - Same exceptions for same error conditions
    - Same state transitions
 
-5. **Wire into lifespan** in `app/main.py`:
-   - Add device selection logic in the `lifespan()` function
-   - Ensure `all_off()` runs on both startup and shutdown for the new device
+5. **Wire into lifespan** in the app factory:
+   - Add selection logic in the lifespan function
+   - Ensure the fail-safe operation runs on both startup and shutdown for the new implementation
 
-6. **Write tests** in `tests/test_core_device.py`:
+6. **Write tests** in the core layer test file (see test file mapping in project config):
    - Test `open()` / `close()` lifecycle
-   - Test `set_channel()` for valid and invalid channels
+   - Test state-changing operations for valid and invalid inputs
    - Test `get_info()` returns expected structure
    - Test error conditions raise typed exceptions
    - Test `is_open` property accuracy
 
-7. **Verify**: Run `python -m pytest tests/ -v --tb=short` and `python -m mypy app/`
+7. **Verify**: Run the test command and the type-check command (see project config)

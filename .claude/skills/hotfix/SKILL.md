@@ -26,17 +26,9 @@ git checkout -b hotfix/<short-description>
 Write a test that:
 1. Reproduces the bug (would fail on main)
 2. Passes with the fix applied
-```python
-def test_hotfix_<description>(self, client: TestClient) -> None:
-    # This would have caught the bug
-    ...
-```
 
 ## Step 4 — Verify
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 Both MUST pass. The hotfix must not break anything else.
 
 ## Step 5 — Commit
@@ -55,8 +47,8 @@ git merge hotfix/<short-description>
 
 ## Step 7 — Patch Release
 Bump the patch version:
-1. Update `app/config.py` — `app_version`
-2. Update `.env.example` — `RELAY_APP_VERSION`
+1. Update the version field in the config file
+2. Update the env example file version
 3. Commit: `chore: release v<X.Y.Z+1>`
 4. Tag: `git tag -a v<X.Y.Z+1> -m "Hotfix: <description>"`
 5. Push: `git push origin main && git push origin v<X.Y.Z+1>`

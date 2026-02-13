@@ -14,15 +14,12 @@ If not already done, run `/audit` to identify all issues. Otherwise, work from t
 ## Step 2 — Remove Dead Code
 
 ### Unused imports:
-- Search every `.py` file under `app/` for imports that are never referenced
+- Search every source file for imports that are never referenced
 - Remove them
-- Run `python -m mypy app/` after each batch to catch anything that was actually needed
+- Run the type-check command after each batch to catch anything that was actually needed
 
 ### Unused functions/methods:
-- For each function identified as unused, search the entire codebase for callers:
-  ```
-  Grep for function_name in app/ and tests/
-  ```
+- For each function identified as unused, search the entire codebase for callers
 - If zero callers: remove the function
 - If only called in tests: keep it (it's being tested)
 
@@ -41,21 +38,18 @@ Ensure imports follow this order in every file:
 4. Local imports
 
 ## Step 4 — Remove Stale Configuration
-- Check `.env.example` for settings not in `app/config.py`
-- Check `app/config.py` for settings not documented in `.env.example`
+- Check env example file for settings not in the config file
+- Check config file for settings not documented in the env example file
 - Remove any that don't belong
 
 ## Step 5 — Clean Test Files
 - Remove empty test classes
 - Remove skipped tests without linked issues
-- Remove unused test fixtures from `conftest.py`
+- Remove unused test fixtures from conftest
 - Verify all test imports are used
 
 ## Step 6 — Verify Nothing Broke
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 Both MUST pass. If anything breaks, the removed code was actually needed — restore it.
 
 ## Step 7 — Summary

@@ -1,30 +1,28 @@
 ---
 name: integration-test
-description: Write end-to-end integration tests that exercise full request-to-device flows (Priya Sharma's workflow)
+description: Write end-to-end integration tests that exercise full request-to-response flows (Priya Sharma's workflow)
 disable-model-invocation: true
 ---
 
 Write integration tests for: $ARGUMENTS
 
-Integration tests differ from unit tests — they exercise the FULL path from HTTP request through auth, service, device, and back.
+Integration tests differ from unit tests — they exercise the FULL path from HTTP request through auth, service, external resource, and back.
 
 ## Step 1 — Identify Integration Scenarios
 Map complete user workflows:
-- Full request lifecycle: HTTP → Auth → Service → Device → Response
-- Multi-step workflows: Set channel → verify state → set all → verify all
-- Error recovery: Device disconnect mid-operation → reconnect → verify state
+- Full request lifecycle: HTTP → Auth → Service → External Resource → Response
+- Multi-step workflows: Set state → verify → set all → verify all
+- Error recovery: Resource disconnect mid-operation → verify state consistency
 - Auth flows: No key → rejected, wrong key → rejected, correct key → success
 - Rate limiting: Within limit → success, exceed limit → 429 → wait → success
 
 ## Step 2 — Write Integration Test Fixtures
+Create a fixture that uses the REAL DI chain — no dependency overrides:
 ```python
 @pytest.fixture()
 def integration_client() -> Generator[TestClient, None, None]:
-    """Full integration client with real service chain — no dependency overrides."""
-    device = MockRelayDevice(channels=2)
-    device.open()
-    service = RelayService(device, channels=2)
-    init_relay_service(service)
+    """Full integration client with real service chain."""
+    # Initialize mock implementation, service, and app
     # NO dependency overrides — tests the real DI chain
     yield TestClient(app, raise_server_exceptions=False)
 ```
@@ -32,54 +30,22 @@ def integration_client() -> Generator[TestClient, None, None]:
 ## Step 3 — Write Integration Tests
 
 ### Workflow tests (multi-step):
-```python
-class TestRelayWorkflow:
-    def test_full_relay_lifecycle(self, integration_client):
-        # Set channel ON
-        resp = integration_client.put("/api/v1/relays/1", json={"state": "on"})
-        assert resp.status_code == 200
-        assert resp.json()["state"] == "on"
-
-        # Verify state persists
-        resp = integration_client.get("/api/v1/relays/1")
-        assert resp.json()["state"] == "on"
-
-        # Set all OFF
-        resp = integration_client.put("/api/v1/relays", json={"state": "off"})
-        assert resp.status_code == 200
-
-        # Verify all channels OFF
-        resp = integration_client.get("/api/v1/relays")
-        for relay in resp.json():
-            assert relay["state"] == "off"
-```
+Test complete user workflows that exercise multiple endpoints in sequence.
+Verify state persists between requests and final state is consistent.
 
 ### Error recovery tests:
-```python
-class TestErrorRecovery:
-    def test_device_error_returns_503_and_state_unchanged(self, ...):
-        # Set initial state
-        # Simulate device failure
-        # Verify 503 response
-        # Verify state rolled back
-```
+Test that errors leave the system in a consistent state.
+Verify rollback behavior on partial failures.
 
 ### Cross-cutting tests:
-```python
-class TestCrossCutting:
-    def test_health_returns_ok_while_device_connected(self, ...):
-    def test_health_returns_degraded_when_disconnected(self, ...):
-    def test_audit_log_produced_for_every_state_change(self, ...):
-```
+- Health endpoint returns correct status based on resource connection state
+- Audit log produced for every state-changing operation
 
 ## Step 4 — Organize
-Place integration tests in `tests/test_integration.py` (separate from unit tests).
+Place integration tests in the integration test file (see test file mapping in project config).
 
 ## Step 5 — Verify
-```bash
-python -m pytest tests/test_integration.py -v --tb=short
-python -m pytest tests/ -v --tb=short  # Full suite still passes
-```
+Run the test command (see project config) — full suite still passes.
 
 ## Rules
 - Integration tests use the REAL DI chain — minimal or no dependency overrides

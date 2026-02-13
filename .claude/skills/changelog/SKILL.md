@@ -6,74 +6,60 @@ disable-model-invocation: true
 
 Generate a changelog: $ARGUMENTS
 
-If no version/range is specified, generate from the last tag (or all history if no tags exist).
-
 ## Step 1 — Gather Commits
 ```bash
-git log --oneline --no-merges <range>
-```
-If no range given:
-```bash
-git tag --sort=-v:refname | head -1   # Find latest tag
-git log <latest-tag>..HEAD --oneline --no-merges
-```
-If no tags exist:
-```bash
-git log --oneline --no-merges
+# Since last tag:
+git log $(git describe --tags --abbrev=0)..HEAD --oneline
+
+# Or between two tags:
+git log v<from>..v<to> --oneline
 ```
 
-## Step 2 — Categorize Changes
-
+## Step 2 — Categorize
 Group commits by type using conventional commit prefixes:
 
-### Added
-- `feat` commits — new features, endpoints, capabilities
+| Category | Commit Types |
+|----------|-------------|
+| Added | `feat` |
+| Changed | `refactor`, `chore` |
+| Fixed | `fix` |
+| Security | `security` |
+| Documentation | `docs` |
+| Testing | `test` |
 
-### Changed
-- `refactor` commits — restructuring, improvements
-- `chore` commits — dependency updates, config changes
-
-### Fixed
-- `fix` commits — bug fixes
-
-### Security
-- `security` commits — security improvements
-
-### Documentation
-- `docs` commits — documentation updates
-
-### Testing
-- `test` commits — new or updated tests
-
-## Step 3 — Format Output
-
+## Step 3 — Format Changelog
 ```markdown
-# Changelog
-
-## [<version>] - <date>
+## [<version>] - <YYYY-MM-DD>
 
 ### Added
-- <description> (<commit hash>)
+- <description of new features>
 
 ### Changed
-- <description> (<commit hash>)
+- <description of changes>
 
 ### Fixed
-- <description> (<commit hash>)
+- <description of bug fixes>
 
 ### Security
-- <description> (<commit hash>)
+- <description of security improvements>
 ```
 
-## Step 4 — Include Summary Stats
-- Total commits
-- Files changed
-- Lines added/removed
-- Test count change (if applicable)
+## Step 4 — Write to Changelog File
+Prepend the new entry to the changelog file (see project config for path).
+Keep the existing changelog entries below the new one.
+
+## Step 5 — Summary
+```
+Changelog for v<version>:
+  Added:    X items
+  Changed:  X items
+  Fixed:    X items
+  Security: X items
+  Total commits: X
+```
 
 ## Rules
-- Write descriptions from the USER's perspective, not developer's
-- "Add rate limiting" not "Add RateLimitMiddleware class"
-- Skip merge commits and version bumps
-- Include commit hash as reference
-- Order by importance within each category
+- Use past tense for descriptions ("Added support for..." not "Add support for...")
+- Group related changes under one bullet point
+- Don't include merge commits or chore commits in the changelog unless significant
+- Link to issues or PRs where relevant

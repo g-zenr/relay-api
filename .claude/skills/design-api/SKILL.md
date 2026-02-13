@@ -18,7 +18,7 @@ Design BEFORE implementing. This produces a specification that /add-endpoint or 
 For each endpoint, define:
 
 ```markdown
-### `METHOD /api/v1/<path>`
+### `METHOD /api/<version>/<path>`
 **Summary:** <one-line description>
 **Auth:** Required / Public
 **Request Body:**
@@ -36,10 +36,10 @@ For each endpoint, define:
 **Error Responses:**
 | Status | Condition | Response |
 |--------|-----------|----------|
-| 401 | Missing/invalid API key | `{"detail": "Invalid or missing API key"}` |
-| 404 | Resource not found | `{"detail": "..."}` |
+| 401 | Missing/invalid API key | Uniform auth error message |
+| 404 | Resource not found | Error response model |
 | 422 | Validation error | Pydantic validation error |
-| 503 | Device disconnected | `{"detail": "Device not connected"}` |
+| 503 | External resource unavailable | Error response model |
 ```
 
 ## Step 3 — Pydantic Models
@@ -56,14 +56,14 @@ class FeatureResponse(BaseModel):
 - Enum types for fixed value sets
 
 ## Step 4 — Route Organization
-- Determine which router file: `relays.py` or `system.py` (or new router?)
+- Determine which router file (see Routers in project config, or new router?)
 - Static routes MUST come before parameterized routes
-- Version prefix: `/api/v1/`
+- Version prefix per project conventions
 - Consider path conflicts with existing routes
 
 ## Step 5 — Auth & Security
-- Which endpoints modify state? → Require auth (`Depends(get_relay_service)`)
-- Which endpoints are read-only monitoring? → Consider public access (`Depends(get_relay_service_public)`)
+- Which endpoints modify state? → Require auth (auth-protected DI dependency)
+- Which endpoints are read-only monitoring? → Consider public access (public DI dependency)
 - What input validation is needed beyond Pydantic?
 - Rate limiting implications?
 
@@ -73,4 +73,4 @@ class FeatureResponse(BaseModel):
 - Are new required fields added to existing requests? → Breaking change
 
 ## Output
-Produce a complete API specification document that /add-endpoint or /add-feature can implement directly. Include all endpoints, models, status codes, and auth requirements.
+Produce a complete API specification document that /add-endpoint or /add-feature can implement directly.

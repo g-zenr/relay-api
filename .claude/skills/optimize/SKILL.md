@@ -7,23 +7,20 @@ disable-model-invocation: true
 Optimize: $ARGUMENTS
 
 ## Step 1 — Baseline Measurement
-Before optimizing, measure current performance:
-```bash
-python -m pytest tests/ -v --tb=short  # Ensure tests pass first
-```
+Before optimizing, run the test command (see project config) to ensure tests pass.
 
 Identify what to measure:
 - **Endpoint latency**: Time from request to response
 - **Throughput**: Requests per second under load
 - **Memory**: Per-request memory allocation
-- **Lock contention**: Time spent waiting on `threading.Lock`
+- **Lock contention**: Time spent waiting on locks
 
 ## Step 2 — Profile
 Read the code and identify potential bottlenecks:
 
-### Common bottlenecks in this codebase:
-- **Lock contention** in `RelayService` — are locks held too long?
-- **HID communication** — is `set_channel` blocking other requests?
+### Common bottlenecks:
+- **Lock contention** in the service class — are locks held too long?
+- **External resource communication** — is it blocking other requests?
 - **Middleware overhead** — rate limiter checking on every request
 - **Pydantic serialization** — model validation on large response lists
 - **Logging** — synchronous logging in hot paths
@@ -50,10 +47,7 @@ For each bottleneck identified:
 - Never sacrifice thread safety for performance
 
 ## Step 4 — Verify
-```bash
-python -m pytest tests/ -v --tb=short
-python -m mypy app/
-```
+Run the test and type-check commands (see project config).
 All tests MUST still pass. No type errors. No regressions.
 
 ## Step 5 — Document

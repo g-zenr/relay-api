@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import utils.transport
+import utils.session
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -41,7 +43,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 "Relay endpoints will return 503 until the device is available."
             )
 
-    service = RelayService(device, channels=settings.relay_channels)
+    service = RelayService(
+        device, channels=settings.relay_channels, pulse_ms=settings.pulse_ms,
+    )
     if device.is_open:
         service.all_off()
     init_relay_service(service)
@@ -52,6 +56,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("API key authentication DISABLED (open access)")
     if settings.rate_limit > 0:
         logger.info("Rate limiting ENABLED (%d req/min)", settings.rate_limit)
+    if settings.pulse_ms > 0:
+        logger.info("Pulse mode ENABLED (%dms auto-off)", settings.pulse_ms)
     logger.info("Relay API started")
     yield
 

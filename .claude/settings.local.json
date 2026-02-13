@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venvScriptspip install --upgrade pip)",
+      "Bash(./venv/Scripts/python.exe -m pip:*)",
+      "Bash(./venv/Scripts/python.exe -m pytest tests/ -v --tb=short)",
+      "Bash(dir:*)",
+      "Bash(.venvScriptspython.exe -m pytest tests/ -v --tb=short)",
+      "Bash(c:\\\\Users\\\\Renz\\\\Documents\\\\relay-api\\\\venv\\\\Scripts\\\\python.exe -m pytest:*)",
+      "Bash(cmd /c \"c:\\\\Users\\\\Renz\\\\Documents\\\\relay-api\\\\venv\\\\Scripts\\\\python.exe -m pytest:*)",
+      "Bash(powershell -Command \"& 'c:\\\\Users\\\\Renz\\\\Documents\\\\relay-api\\\\venv\\\\Scripts\\\\python.exe' -m pytest:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "WebFetch(domain:humanwhocodes.com)",
+      "WebFetch(domain:decoding.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:www.humanlayer.dev)",
+      "WebFetch(domain:helderberto.com)",
+      "WebFetch(domain:www.anthropic.com)",
+      "Bash(gh api:*)",
+      "Bash(git reset:*)",
+      "Bash(wc:*)",
+      "Bash(git checkout:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(set RELAY_MOCK=true:*)",
+      "Bash(findstr:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m mypy:*)"
+    ]
+  }
+}

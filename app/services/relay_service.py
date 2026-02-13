@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from datetime import datetime, timezone
 
 from app.core.device import RelayDevice
 from app.core.exceptions import InvalidChannelError
-from app.models.schemas import DeviceInfo, RelayState, RelayStatus
+from app.models.schemas import (
+    BurnTestMode,
+    BurnTestStatus,
+    DeviceInfo,
+    RelayState,
+    RelayStatus,
+)
 
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger("relay.audit")
@@ -26,6 +33,13 @@ class RelayService:
         self._states: dict[int, RelayState] = {
             ch: RelayState.OFF for ch in range(1, channels + 1)
         }
+        self._burn_running = False
+        self._burn_stop = threading.Event()
+        self._burn_cycles_completed = 0
+        self._burn_cycles_target = 0
+        self._burn_errors = 0
+        self._burn_mode = BurnTestMode.ALL
+        self._burn_thread: threading.Thread | None = None
 
     def _validate_channel(self, channel: int) -> None:
         if channel < 1 or channel > self._channels:
@@ -114,3 +128,154 @@ class RelayService:
             channels=self._channels,
             connected=self._device.is_open,
         )
+
+    # --- Burn test ---
+
+    def start_burn_test(
+        self, cycles: int, delay_ms: int, mode: BurnTestMode = BurnTestMode.ALL,
+    ) -> BurnTestStatus:
+        """Start a background burn test that cycles relays."""
+        if self._burn_running:
+            return self.get_burn_test_status()
+
+        self._burn_stop.clear()
+        self._burn_cycles_completed = 0
+        self._burn_cycles_target = cycles
+        self._burn_errors = 0
+        self._burn_mode = mode
+        self._burn_running = True
+
+        self._burn_thread = threading.Thread(
+            target=self._burn_test_loop,
+            args=(cycles, delay_ms / 1000.0, mode),
+            daemon=True,
+        )
+        self._burn_thread.start()
+        logger.info(
+            "Burn test started: mode=%s, cycles=%s, delay=%dms",
+            mode.value,
+            cycles if cycles > 0 else "indefinite",
+            delay_ms,
+        )
+        self._audit("burn_test_start", None, RelayState.OFF)
+        return self.get_burn_test_status()
+
+    def stop_burn_test(self) -> BurnTestStatus:
+        """Stop a running burn test and turn all relays OFF."""
+        if not self._burn_running:
+            return self.get_burn_test_status()
+
+        self._burn_stop.set()
+        if self._burn_thread and self._burn_thread.is_alive():
+            self._burn_thread.join(timeout=5.0)
+
+        self.all_off()
+        logger.info(
+            "Burn test stopped after %d cycles", self._burn_cycles_completed
+        )
+        self._audit("burn_test_stop", None, RelayState.OFF)
+        return self.get_burn_test_status()
+
+    def get_burn_test_status(self) -> BurnTestStatus:
+        """Get current burn test status."""
+        return BurnTestStatus(
+            running=self._burn_running,
+            cycles_completed=self._burn_cycles_completed,
+            cycles_target=self._burn_cycles_target,
+            errors=self._burn_errors,
+            mode=self._burn_mode,
+        )
+
+    def _burn_test_loop(
+        self, cycles: int, delay_s: float, mode: BurnTestMode = BurnTestMode.ALL,
+    ) -> None:
+        """Background loop that toggles relays based on mode."""
+        try:
+            if mode == BurnTestMode.ALTERNATE:
+                self._burn_loop_alternate(cycles, delay_s)
+            else:
+                self._burn_loop_all(cycles, delay_s)
+        finally:
+            self._burn_running = False
+            logger.info(
+                "Burn test finished: mode=%s, %d cycles, %d errors",
+                mode.value,
+                self._burn_cycles_completed,
+                self._burn_errors,
+            )
+
+    def _burn_loop_all(self, cycles: int, delay_s: float) -> None:
+        """All channels ON together, then all OFF together."""
+        cycle = 0
+        while not self._burn_stop.is_set():
+            if cycles > 0 and cycle >= cycles:
+                break
+
+            # ON phase
+            for ch in range(1, self._channels + 1):
+                if self._burn_stop.is_set():
+                    return
+                try:
+                    self.set_channel(ch, RelayState.ON)
+                except Exception:
+                    self._burn_errors += 1
+                    logger.exception("Burn test error on channel %d ON", ch)
+
+            if self._burn_stop.wait(delay_s):
+                return
+
+            # OFF phase
+            for ch in range(1, self._channels + 1):
+                if self._burn_stop.is_set():
+                    return
+                try:
+                    self.set_channel(ch, RelayState.OFF)
+                except Exception:
+                    self._burn_errors += 1
+                    logger.exception("Burn test error on channel %d OFF", ch)
+
+            if self._burn_stop.wait(delay_s):
+                return
+
+            cycle += 1
+            self._burn_cycles_completed = cycle
+
+    def _burn_loop_alternate(self, cycles: int, delay_s: float) -> None:
+        """Relay 1 ON / Relay 2 OFF, then swap. Alternating switch test."""
+        cycle = 0
+        while not self._burn_stop.is_set():
+            if cycles > 0 and cycle >= cycles:
+                break
+
+            # Phase A: relay 1 ON, relay 2 OFF
+            try:
+                self.set_channel(1, RelayState.ON)
+            except Exception:
+                self._burn_errors += 1
+                logger.exception("Burn test alternate error: ch1 ON")
+            try:
+                self.set_channel(2, RelayState.OFF)
+            except Exception:
+                self._burn_errors += 1
+                logger.exception("Burn test alternate error: ch2 OFF")
+
+            if self._burn_stop.wait(delay_s):
+                return
+
+            # Phase B: relay 1 OFF, relay 2 ON
+            try:
+                self.set_channel(1, RelayState.OFF)
+            except Exception:
+                self._burn_errors += 1
+                logger.exception("Burn test alternate error: ch1 OFF")
+            try:
+                self.set_channel(2, RelayState.ON)
+            except Exception:
+                self._burn_errors += 1
+                logger.exception("Burn test alternate error: ch2 ON")
+
+            if self._burn_stop.wait(delay_s):
+                return
+
+            cycle += 1
+            self._burn_cycles_completed = cycle

@@ -10,6 +10,11 @@ class RelayState(str, Enum):
     OFF = "off"
 
 
+class BurnTestMode(str, Enum):
+    ALL = "all"
+    ALTERNATE = "alternate"
+
+
 class RelayCommand(BaseModel):
     """Command to set a single relay channel state."""
 
@@ -114,3 +119,62 @@ class RelayAllStatus(BaseModel):
     }
 
     channels: list[RelayStatus] = Field(description="List of all channel states")
+
+
+class BurnTestRequest(BaseModel):
+    """Request to start a relay burn test."""
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"cycles": 100, "delay_ms": 500, "mode": "all"},
+                {"cycles": 0, "delay_ms": 300, "mode": "alternate"},
+            ]
+        }
+    }
+
+    cycles: int = Field(
+        default=0,
+        ge=0,
+        description="Number of cycles to run. 0 = run indefinitely until stopped.",
+    )
+    delay_ms: int = Field(
+        default=500,
+        ge=100,
+        le=60000,
+        description="Delay in milliseconds between each state change (min 100ms).",
+    )
+    mode: BurnTestMode = Field(
+        default=BurnTestMode.ALL,
+        description="Test mode: 'all' cycles every channel ON/OFF together, "
+        "'alternate' switches relay 1 and relay 2 back and forth.",
+    )
+
+
+class BurnTestStatus(BaseModel):
+    """Current status of a burn test."""
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "running": True,
+                    "cycles_completed": 42,
+                    "cycles_target": 100,
+                    "errors": 0,
+                    "mode": "all",
+                }
+            ]
+        }
+    }
+
+    running: bool = Field(description="Whether the burn test is currently active")
+    cycles_completed: int = Field(description="Number of ON/OFF cycles completed")
+    cycles_target: int = Field(
+        description="Target number of cycles (0 = indefinite)"
+    )
+    errors: int = Field(description="Number of errors encountered during the test")
+    mode: BurnTestMode = Field(
+        default=BurnTestMode.ALL,
+        description="Current burn test mode",
+    )

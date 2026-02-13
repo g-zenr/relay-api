@@ -1,0 +1,14 @@
+[tool.mypy]
+python_version = "3.12"
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "hid.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

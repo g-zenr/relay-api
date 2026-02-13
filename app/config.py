@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     api_key: str = ""
     rate_limit: int = 0
+    pulse_ms: int = 0
 
     model_config = SettingsConfigDict(
         env_prefix="RELAY_",

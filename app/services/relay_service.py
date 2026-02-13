@@ -26,13 +26,17 @@ class RelayService:
     via a lock to prevent concurrent HID writes.
     """
 
-    def __init__(self, device: RelayDevice, channels: int):
+    def __init__(
+        self, device: RelayDevice, channels: int, pulse_ms: int = 0,
+    ):
         self._device = device
         self._channels = channels
+        self._pulse_ms = pulse_ms
         self._lock = threading.Lock()
         self._states: dict[int, RelayState] = {
             ch: RelayState.OFF for ch in range(1, channels + 1)
         }
+        self._pulse_timers: dict[int, threading.Timer] = {}
         self._burn_running = False
         self._burn_stop = threading.Event()
         self._burn_cycles_completed = 0
@@ -50,14 +54,41 @@ class RelayService:
         target = f"channel={channel}" if channel else "all"
         audit_logger.info("%s | %s | %s → %s", ts, action, target, state.value)
 
+    def _cancel_pulse_timer(self, channel: int) -> None:
+        """Cancel any pending pulse auto-off timer for a channel."""
+        timer = self._pulse_timers.pop(channel, None)
+        if timer is not None:
+            timer.cancel()
+
+    def _pulse_off(self, channel: int) -> None:
+        """Timer callback: turn a channel OFF after a pulse delay."""
+        with self._lock:
+            try:
+                self._device.set_channel(channel, False)
+                self._states[channel] = RelayState.OFF
+                logger.info("Channel %d pulse OFF (auto)", channel)
+            except Exception:
+                logger.exception("Pulse auto-off failed for channel %d", channel)
+            finally:
+                self._pulse_timers.pop(channel, None)
+        self._audit("pulse_off", channel, RelayState.OFF)
+
     def set_channel(self, channel: int, state: RelayState) -> RelayStatus:
         self._validate_channel(channel)
         on = state == RelayState.ON
+        self._cancel_pulse_timer(channel)
         with self._lock:
             self._device.set_channel(channel, on)
             self._states[channel] = state
             logger.info("Channel %d set to %s", channel, state.value)
         self._audit("set_channel", channel, state)
+        if on and self._pulse_ms > 0:
+            timer = threading.Timer(
+                self._pulse_ms / 1000.0, self._pulse_off, args=(channel,),
+            )
+            timer.daemon = True
+            self._pulse_timers[channel] = timer
+            timer.start()
         return RelayStatus(channel=channel, state=state)
 
     def get_channel(self, channel: int) -> RelayStatus:

@@ -1,0 +1,76 @@
+---
+name: deps
+description: Audit and upgrade Python dependencies — check for vulnerabilities and outdated packages
+disable-model-invocation: true
+---
+
+Audit and manage project dependencies: $ARGUMENTS
+
+If no specific action requested, run the full audit.
+
+## Step 1 — Read Current Dependencies
+```bash
+cat requirements.txt
+```
+List all packages with their current version constraints.
+
+## Step 2 — Check Installed Versions
+```bash
+pip list --format=columns
+```
+Compare installed versions against requirements.txt constraints.
+
+## Step 3 — Vulnerability Scan
+```bash
+pip audit
+```
+If `pip-audit` is not installed:
+```bash
+pip install pip-audit && pip audit
+```
+Report any known CVEs with severity, affected package, and fixed version.
+
+## Step 4 — Check for Outdated Packages
+```bash
+pip list --outdated --format=columns
+```
+For each outdated package, report:
+- Current version
+- Latest version
+- Whether the update is a major/minor/patch bump
+- Risk assessment (major bumps may have breaking changes)
+
+## Step 5 — Compatibility Check
+For any proposed upgrades:
+- Check if the new version still supports Python 3.12
+- Check for known incompatibilities between upgraded packages
+- Verify FastAPI/Pydantic/uvicorn version compatibility
+
+## Step 6 — Apply Upgrades (if requested)
+If user asked to upgrade:
+1. Update version constraints in `requirements.txt`
+2. Install updated packages: `pip install -r requirements.txt`
+3. Run verification:
+   ```bash
+   python -m pytest tests/ -v --tb=short
+   python -m mypy app/
+   ```
+4. If tests fail after upgrade, identify which package caused the failure and roll back that specific upgrade
+
+## Output Format
+```
+DEPENDENCY AUDIT
+════════════════
+
+Vulnerabilities:  X found (Critical: X, High: X, Medium: X)
+Outdated:         X packages
+Up to date:       X packages
+
+VULNERABILITIES:
+  [CRITICAL] package==version — CVE-XXXX-XXXX — description — fix: upgrade to X.Y.Z
+
+OUTDATED:
+  package      current → latest   (patch/minor/major)
+
+RECOMMENDATION: <upgrade commands or "all clear">
+```

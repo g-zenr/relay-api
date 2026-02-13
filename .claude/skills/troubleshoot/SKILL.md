@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 Troubleshoot: $ARGUMENTS
 
-Unlike `/debug` (code-level bugs) or `/fix-issue` (known issues), `/troubleshoot` investigates runtime/production problems from symptoms.
+Unlike `/fix-issue` (code-level bugs), `/troubleshoot` investigates runtime/production problems from symptoms.
 
 ## Step 1 — Gather Symptoms
 Identify what's happening:
@@ -62,12 +62,12 @@ curl -X PUT http://localhost:8000/api/v1/relays/1 \
   -d '{"state": "on"}'
 ```
 - If it works in mock mode → hardware/driver issue
-- If it fails in mock mode → software bug → switch to `/debug`
+- If it fails in mock mode → software bug → switch to `/fix-issue`
 
 ## Step 6 — Resolution
 - If config issue → fix env vars, restart
 - If hardware issue → check USB connection, permissions, drivers
-- If software bug → use `/debug` or `/fix-issue` to fix the code
+- If software bug → use `/fix-issue` to fix the code
 - If performance issue → use `/optimize` to profile and fix
 
 ## Step 7 — Document

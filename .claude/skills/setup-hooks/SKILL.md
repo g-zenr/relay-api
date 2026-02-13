@@ -8,21 +8,21 @@ Set up Claude Code hooks for the project.
 
 Hooks enforce coding standards automatically — they run scripts at specific points in Claude's workflow. Unlike CLAUDE.md instructions (advisory), hooks are deterministic and guarantee the action happens.
 
-## Hook 1 — Python Syntax Check After File Edits
+## Hook 1 — Syntax Check After File Edits
 **Event:** `PostToolUse` on `Write` and `Edit` tools
 **Purpose:** Catch syntax errors immediately after writing/editing Python files
-**Command:** Parse the edited file with Python's `ast` module — fails if syntax is broken
+**Command:** Run the syntax validation command (see stack concepts in project config) — fails if syntax is broken
 
-## Hook 2 — Future Annotations Check After File Edits
+## Hook 2 — Annotations Check After File Edits
 **Event:** `PostToolUse` on `Write` and `Edit` tools
-**Purpose:** Enforce `from __future__ import annotations` in every `.py` file under the source root
-**Command:** Check if the file is under the source root and is `.py`, then verify the import exists
+**Purpose:** Enforce the future annotations pattern (see stack concepts) in source files under the source root
+**Command:** Check if the file is under the source root, then verify the annotations pattern exists
 
 ## Hook 3 — Tests After File Edits
 **Event:** `PostToolUse` on `Write` and `Edit` tools
 **Purpose:** Run tests after modifying source or test files to catch regressions immediately
 **Command:** Run the test command (see project config)
-**Note:** Only trigger on `.py` file edits, not README or config files
+**Note:** Only trigger on source code file edits, not README or config files
 
 ## Installation
 

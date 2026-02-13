@@ -21,14 +21,14 @@ Follow Daniel Okoye's architecture standards:
    - If renaming, update ALL callers and tests in the same commit
    - Maintain layer boundaries (see Layers in project config) — never reverse dependency flow
    - Keep route handlers thin — if moving logic, move it INTO service layer, not out
-   - All service access still via `Depends()` — no direct imports in API layer
-   - Keep `from __future__ import annotations` in every file
-   - No new `Any` types — use explicit types
+   - All service access still via DI injection (see stack concepts) — no direct imports in API layer
+   - Keep future annotations pattern in every file (see stack concepts)
+   - No new untyped/any types — use explicit types
 
 4. **If splitting files**:
    - Update `__init__.py` exports if needed
    - Ensure no circular imports between layers
-   - Each new file gets `from __future__ import annotations`
+   - Each new file follows the future annotations pattern (see stack concepts)
 
 5. **If renaming**:
    - Search entire codebase for old name: source files, tests, config, docs

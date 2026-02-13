@@ -21,7 +21,7 @@ Understand what changed, which files are affected, and which layer (core/service
 ## Step 3 — Stage Files
 - Stage only relevant files — never `git add .` blindly
 - NEVER stage `.env`, credentials, or secrets
-- NEVER stage `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `venv/`
+- NEVER stage build artifacts (see stack concepts in project config for list)
 - Verify `.gitignore` covers sensitive files
 
 ## Step 4 — Generate Commit Message

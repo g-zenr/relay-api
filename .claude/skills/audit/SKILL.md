@@ -38,7 +38,7 @@ Check dependency flow is never reversed (see Layers in project config):
 - Check for deeply nested conditionals (> 3 levels)
 - Check for magic numbers/strings (should be constants or config)
 - Verify all functions have return type annotations
-- Verify `from __future__ import annotations` in every source file
+- Verify future annotations pattern is followed (see stack concepts in project config)
 
 ## 6. API Contract Audit
 - Verify every endpoint has `response_model` (no raw dict returns)

@@ -1,6 +1,6 @@
 ---
 name: deps
-description: Audit and upgrade Python dependencies — check for vulnerabilities and outdated packages
+description: Audit and upgrade project dependencies — check for vulnerabilities and outdated packages
 disable-model-invocation: true
 ---
 
@@ -13,23 +13,20 @@ Read the requirements file. List all packages with their current version constra
 
 ## Step 2 — Check Installed Versions
 ```bash
-pip list --format=columns
+# List installed packages (use the package manager from project config)
+# Example: pip list, npm list, go list, cargo tree, etc.
 ```
 Compare installed versions against requirements constraints.
 
 ## Step 3 — Vulnerability Scan
 ```bash
-pip audit
-```
-If `pip-audit` is not installed:
-```bash
-pip install pip-audit && pip audit
+# Run the dependency audit command (see project config)
 ```
 Report any known CVEs with severity, affected package, and fixed version.
 
 ## Step 4 — Check for Outdated Packages
 ```bash
-pip list --outdated --format=columns
+# Run the outdated packages command (see project config)
 ```
 For each outdated package, report:
 - Current version
@@ -39,7 +36,7 @@ For each outdated package, report:
 
 ## Step 5 — Compatibility Check
 For any proposed upgrades:
-- Check if the new version supports the project's Python version
+- Check if the new version supports the project's language version (see stack concepts)
 - Check for known incompatibilities between upgraded packages
 - Verify framework version compatibility
 

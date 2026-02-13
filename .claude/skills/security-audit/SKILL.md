@@ -8,7 +8,7 @@ Perform a security audit following Janet Moore's standards.
 ## Audit Checklist
 
 ### 1. Authentication & Authorization
-- Read the dependencies/DI file — verify `hmac.compare_digest()` is used, not `==`
+- Read the dependencies/DI file — verify timing-safe comparison (see stack concepts) is used, not equality operator
 - Verify health/readiness endpoints bypass auth via the public DI dependency
 - Verify ALL state-changing endpoints require auth when API key is configured
 - Check error messages are uniform — no enumeration clues
@@ -17,7 +17,7 @@ Perform a security audit following Janet Moore's standards.
 - Read the models/schemas file — verify all fields have type constraints
 - Check identifier parameters use appropriate validation constraints
 - Check state parameters use enum types — no raw strings
-- Verify Pydantic models are used on every endpoint (no raw dict parsing)
+- Verify typed schemas (see stack concepts) are used on every endpoint (no raw object parsing)
 
 ### 3. Information Leakage
 - Search for `traceback`, `stack`, `__file__`, `__name__` in API responses

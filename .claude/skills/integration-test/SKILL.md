@@ -18,13 +18,14 @@ Map complete user workflows:
 
 ## Step 2 — Write Integration Test Fixtures
 Create a fixture that uses the REAL DI chain — no dependency overrides:
-```python
-@pytest.fixture()
-def integration_client() -> Generator[TestClient, None, None]:
-    """Full integration client with real service chain."""
-    # Initialize mock implementation, service, and app
-    # NO dependency overrides — tests the real DI chain
-    yield TestClient(app, raise_server_exceptions=False)
+```
+// Full integration fixture — uses REAL DI chain, no overrides
+fixture integration_client() {
+    // Initialize mock implementation, service, and app
+    // NO DI overrides — tests the real dependency chain
+    client = new TestHTTPClient(app, propagate_errors: false)
+    yield client
+}
 ```
 
 ## Step 3 — Write Integration Tests

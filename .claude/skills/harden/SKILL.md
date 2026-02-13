@@ -10,15 +10,15 @@ Unlike `/security-audit` (which finds issues), `/harden` actively fixes them.
 
 ## 1. Authentication Hardening
 - [ ] Verify API key is required in production (not empty)
-- [ ] Verify `hmac.compare_digest()` for all secret comparisons
+- [ ] Verify timing-safe comparison (see stack concepts) for all secret comparisons
 - [ ] Verify uniform error messages (no auth enumeration)
 - [ ] Add API key length validation (minimum 16 characters recommended)
 - [ ] Verify health endpoint bypasses auth correctly
 
 ## 2. Input Validation Hardening
 - [ ] All path parameters have constraints (min/max validation)
-- [ ] All request bodies use Pydantic models with strict validation
-- [ ] Verify no raw `dict` or `Any` types in request handling
+- [ ] All request bodies use typed schemas (see stack concepts) with strict validation
+- [ ] Verify no raw objects or untyped/any types in request handling
 - [ ] Add request body size limits if not present
 
 ## 3. Error Response Hardening

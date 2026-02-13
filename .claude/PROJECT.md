@@ -7,8 +7,48 @@
 
 - **Name:** Relay API
 - **Description:** REST API for controlling DCT Tech USB relay modules via HID
-- **Stack:** Python 3.12, FastAPI, Pydantic v2, pytest, mypy
 - **Domain:** Hardware relay control (USB/HID)
+
+## Stack
+
+| Component | Value |
+|-----------|-------|
+| Language | Python 3.12 |
+| Framework | FastAPI |
+| Schema/Validation | Pydantic v2 |
+| Test Framework | pytest |
+| Type Checker | mypy |
+| Package Manager | pip |
+| Dependency File | requirements.txt |
+| Linter | ruff (optional) |
+| Container Base | python:3.12-slim |
+
+## Stack Concepts
+
+> Skills and personas reference the **Generic Concept** column. Resolve to **This Project** when implementing.
+
+| Generic Concept | This Project |
+|----------------|-------------|
+| Typed request/response schema | Pydantic `BaseModel` |
+| Schema validation constraints | Pydantic `Field(ge=1)`, enums |
+| DI injection | FastAPI `Depends()` |
+| Route decorator | `@router.get/put/post/delete` |
+| Route handler metadata | `response_model=`, `summary=`, `description=`, `responses=` |
+| HTTP exception | `HTTPException(status_code=, detail=)` |
+| Settings/config class | Pydantic `BaseSettings` with `SettingsConfigDict` |
+| Test fixtures | `@pytest.fixture()` |
+| Test assertions | `assert` statements |
+| Log capture in tests | `caplog` fixture |
+| DI override in tests | `app.dependency_overrides[fn] = lambda: mock` |
+| Test HTTP client | `TestClient(app)` |
+| Timing-safe comparison | `hmac.compare_digest()` |
+| Structured logger | `logging.getLogger("name")` |
+| Mutex/lock | `threading.Lock()` |
+| Middleware class | `BaseHTTPMiddleware` |
+| Interface/protocol | `Protocol` with `@runtime_checkable` |
+| Future annotations | `from __future__ import annotations` |
+| Build artifacts to ignore | `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `venv/` |
+| Syntax validation command | `python -c "import ast; ast.parse(open(f).read())"` |
 
 ## Commands
 
@@ -85,14 +125,14 @@
 
 ### Protocol Methods
 
-```python
-class RelayDevice(Protocol):
-    def open(self) -> None: ...
-    def close(self) -> None: ...
-    def set_channel(self, channel: int, on: bool) -> None: ...
-    def get_info(self) -> dict[str, str]: ...
-    @property
-    def is_open(self) -> bool: ...
+```
+interface RelayDevice {
+    open() -> void
+    close() -> void
+    set_channel(channel: int, on: bool) -> void
+    get_info() -> map[string, string]
+    is_open -> bool  // read-only property
+}
 ```
 
 ## Test File Mapping
@@ -168,7 +208,7 @@ class RelayDevice(Protocol):
 | Pattern | Where | Purpose |
 |---------|-------|---------|
 | Protocol (interface) | Core layer | Hardware abstraction |
-| Dependency injection | `Depends()` in API layer | Decoupled service access |
+| Dependency injection | DI framework in API layer | Decoupled service access |
 | Repository pattern | `_states` dict in service | In-memory state tracking |
 | Middleware | Rate limiting | Cross-cutting concerns |
 | Factory pattern | Device creation in lifespan | Extensible device types |

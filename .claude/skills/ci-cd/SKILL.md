@@ -14,8 +14,8 @@ mkdir -p .github/workflows
 ## Step 2 — CI Workflow (tests + type check on every push/PR)
 Create `.github/workflows/ci.yml`:
 - Trigger on push/PR to main
-- Matrix strategy for supported Python versions (see project config)
-- Install dependencies from the requirements file
+- Matrix strategy for supported language versions (see project config)
+- Install dependencies from the dependency file (see project config)
 - Run the test command with mock/dev mode enabled
 - Run the type-check command
 
@@ -44,6 +44,6 @@ Check the Actions tab on GitHub to verify the workflow runs.
 
 ## Rules
 - Always test with mock/dev mode enabled in CI (no hardware)
-- Test on multiple Python versions per project config
+- Test on multiple language versions per project config
 - Docker build test ensures Dockerfile stays valid
 - Never store secrets in workflow files — use GitHub Secrets

@@ -12,7 +12,7 @@ Follow Marcus Chen's infrastructure standards:
 - Read the config file — verify every setting uses the project's env prefix
 - Read the env example file — verify every Settings field is documented
 - Verify no hardcoded values in source (search for literal IPs, ports, device IDs)
-- Verify no `input()` or `print()` calls anywhere in the source root
+- Verify no interactive prompts or raw print/console calls anywhere in the source root
 
 ## 2. Health Endpoint
 - Read the system router — verify the health endpoint returns:
@@ -36,7 +36,7 @@ Follow Marcus Chen's infrastructure standards:
   - Non-root user in runtime stage
   - `HEALTHCHECK` instruction present
   - No secrets baked into image
-  - `.dockerignore` excludes venv, .env, __pycache__, .git
+  - `.dockerignore` excludes build artifacts (see stack concepts), .env, .git
 
 ## 5. Logging
 - Verify structured log format
@@ -45,7 +45,7 @@ Follow Marcus Chen's infrastructure standards:
 - Verify audit logger is used for state changes
 
 ## 6. Dependencies
-- Read the requirements file — verify all deps have minimum versions
+- Read the dependency file (see project config) — verify all deps have minimum versions
 - Check for known vulnerabilities with dependency audit command
 
 ## 7. Tests

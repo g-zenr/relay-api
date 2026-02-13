@@ -9,9 +9,9 @@ Follow this workflow:
 
 1. **Plan**: Identify which router file the endpoint belongs in (see Routers in project config)
 
-2. **Schema**: Add Pydantic request/response models to the models/schemas file if needed
-   - All fields explicitly typed — no `Any`
-   - Use validators and constraints (`ge=1`, enums)
+2. **Schema**: Add typed request/response schemas (see stack concepts for schema library) to the models/schemas file if needed
+   - All fields explicitly typed — no untyped/any fields
+   - Use validation constraints (see stack concepts)
 
 3. **Service**: Add business logic to the service layer if needed
    - Thread-safe with lock mechanism
@@ -21,7 +21,7 @@ Follow this workflow:
 4. **Route**: Add the endpoint to the router
    - Thin handler — delegate to the service class
    - Use the auth-protected DI dependency for protected endpoints, or the public DI dependency for public endpoints
-   - Include `response_model`, `summary`, `description`, `responses` in decorator
+   - Include route handler metadata: response schema, summary, description, responses (see stack concepts)
    - Static routes before parameterized routes
    - Map domain exceptions to HTTP status codes (see exception mapping in project config)
 

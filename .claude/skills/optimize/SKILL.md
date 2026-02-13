@@ -22,7 +22,7 @@ Read the code and identify potential bottlenecks:
 - **Lock contention** in the service class — are locks held too long?
 - **External resource communication** — is it blocking other requests?
 - **Middleware overhead** — rate limiter checking on every request
-- **Pydantic serialization** — model validation on large response lists
+- **Schema serialization** — model validation on large response lists
 - **Logging** — synchronous logging in hot paths
 
 ### Static analysis checklist:

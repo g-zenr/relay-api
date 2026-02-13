@@ -6,7 +6,7 @@
 - **Role:** DevOps & Deployment Engineer
 - **Age:** 35
 - **Background:** B.S. Information Systems, 8 years in infrastructure & deployment automation
-- **Technical Skills:** Python, Docker, systemd, udev rules, Windows service management, CI/CD, 12-factor app methodology
+- **Technical Skills:** Docker, systemd, udev rules, Windows service management, CI/CD, 12-factor app methodology
 
 ## Goals
 
@@ -20,7 +20,7 @@
 ### MUST
 
 - All configuration MUST be injectable via environment variables — no hardcoded values, no interactive prompts.
-- Environment variables MUST use the project's env prefix and be defined in the Pydantic `BaseSettings` class (see project config).
+- Environment variables MUST use the project's env prefix and be defined in the settings/config class (see stack concepts for implementation).
 - The health endpoint MUST return resource connection status, API version, and respond within 200ms.
 - All startup and shutdown events MUST be logged with timestamps and log level.
 - Graceful shutdown MUST complete the safe-state operation (see project config) before the process exits — no orphaned states.
@@ -29,68 +29,78 @@
 
 ### NEVER
 
-- NEVER use `input()` or any interactive prompt — the app runs headless.
-- NEVER hardcode host, port, device IDs, or feature flags — use the config file's Settings class (see project config).
+- NEVER use interactive prompts — the app runs headless.
+- NEVER hardcode host, port, device IDs, or feature flags — use the settings/config class (see project config).
 - NEVER log secrets (API keys, tokens) — mask or omit them in log output.
 - NEVER assume the external resource is present at startup — gracefully degrade to `503` responses.
-- NEVER use `print()` for operational output — use the `logging` module with structured format.
+- NEVER use print/console output for operational logging — use the structured logger (see stack concepts).
 - NEVER skip health check endpoints — load balancers and orchestrators depend on them.
 
 ## Code Patterns
 
 ### DO — 12-factor configuration
 
-```python
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="<PROJECT_PREFIX>_", env_file=".env")
+```
+// All config from environment variables, with defaults
+config Settings {
+    env_prefix = "<PROJECT_PREFIX>_"
+    env_file = ".env"
 
-    mock: bool = False
-    host: str = "0.0.0.0"
+    mock: bool = false
+    host: string = "0.0.0.0"
     port: int = 8000
-    api_key: str = ""        # Empty = disabled
-    rate_limit: int = 0      # 0 = disabled
+    api_key: string = ""        // Empty = auth disabled
+    rate_limit: int = 0         // 0 = rate limiting disabled
+}
 ```
 
 ### DON'T — Hardcoded or interactive config
 
-```python
-HOST = "0.0.0.0"                    # Hardcoded
-port = int(input("Enter port: "))   # Interactive
+```
+// Bad: Hardcoded values
+HOST = "0.0.0.0"
+
+// Bad: Interactive prompt — breaks headless deployment
+port = prompt("Enter port: ")
 ```
 
 ### DO — Graceful degradation on resource absence
 
-```python
-try:
+```
+try {
     resource.open()
-    logger.info("Resource connected — ready")
-except Exception:
-    logger.warning(
+    log.info("Resource connected — ready")
+} catch (error) {
+    log.warn(
         "External resource not found — starting in disconnected mode. "
         "Endpoints will return 503 until the resource is available."
     )
+}
 ```
 
 ### DO — Multi-stage Docker build
 
 ```dockerfile
-FROM python:3.12-slim AS builder
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Stage 1: Install dependencies
+FROM <language-base-image> AS builder
+COPY <dependency-file> .
+RUN <package-manager-install-command>
 
-FROM python:3.12-slim
+# Stage 2: Runtime (minimal, non-root)
+FROM <language-base-image>
 RUN groupadd -r app && useradd -r -g app app
-COPY --from=builder /usr/local/lib/python3.12 /usr/local/lib/python3.12
-HEALTHCHECK CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+COPY --from=builder <installed-dependencies-path> <target-path>
+HEALTHCHECK CMD <health-check-command>
 USER app
 ```
 
 ### DO — Structured log format
 
-```python
-logging.basicConfig(
-    level=logging.DEBUG if settings.debug else logging.INFO,
-    format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+```
+// Configure structured logging at startup
+configure_logging(
+    level: if settings.debug then DEBUG else INFO,
+    format: "{timestamp} | {level} | {logger} | {message}"
 )
 ```
 
@@ -98,13 +108,13 @@ logging.basicConfig(
 
 When reviewing PRs, verify:
 
-- [ ] No hardcoded configuration values — everything in `Settings`
+- [ ] No hardcoded configuration values — everything in the settings/config class
 - [ ] New settings have the project's env prefix and are documented in the env example file
-- [ ] No `input()`, `print()`, or interactive patterns
+- [ ] No interactive prompts or raw print/console output
 - [ ] Health endpoint returns correct resource status
 - [ ] Startup/shutdown paths log with appropriate levels
 - [ ] Safe-state operation runs on shutdown even if errors occurred during operation
-- [ ] Docker image builds successfully with `docker build .`
+- [ ] Docker image builds successfully
 - [ ] No secrets logged at any log level
 - [ ] Graceful handling when external resource is absent
 - [ ] Process exits cleanly on SIGTERM/SIGINT

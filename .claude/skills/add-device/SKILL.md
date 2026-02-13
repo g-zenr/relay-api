@@ -12,7 +12,7 @@ Follow Alex Rivera's hardware integration standards:
 
 2. **Implement the class** in the core layer file:
    - MUST satisfy the primary protocol/interface
-   - `from __future__ import annotations` at top of file
+   - Follow the future annotations pattern (see stack concepts in project config)
    - All methods MUST have return type annotations
    - Document protocol-specific commands with clear comments
    - Raise the discovery error exception if resource not detected on `open()`

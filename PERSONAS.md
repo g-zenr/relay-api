@@ -1,6 +1,6 @@
 # Professional Team Personas
 
-> Each persona defines **who they are**, **what coding standards they enforce**, **what code patterns they require/reject**, and **what they check in every PR**. These personas ensure senior-level code quality through role-specific enforcement. All project-specific details (paths, class names, commands) are defined in `.claude/PROJECT.md` — personas reference generic architectural concepts that resolve via the project config.
+> Each persona defines **who they are**, **what coding standards they enforce**, **what code patterns they require/reject**, and **what they check in every PR**. These personas ensure senior-level code quality through role-specific enforcement. All project-specific details (paths, class names, commands, stack) are defined in `.claude/PROJECT.md` — personas reference generic architectural concepts that resolve via the project config and stack concepts table.
 
 ---
 
@@ -10,7 +10,7 @@
 |---|---|
 | **Role** | Lead Developer / Hardware Integration Engineer |
 | **Background** | B.S. Electrical Engineering, 7 years in IoT & embedded systems |
-| **Skills** | Python, C, HID protocol, USB communication, circuit design |
+| **Skills** | Protocol design, hardware communication, circuit design |
 | **Enforces** | Protocol-first device abstraction, typed exceptions, fail-safe behavior, rollback on partial failure |
 | **Rejects** | Silent exception swallowing, hardcoded device IDs, direct resource access from API layer, unknown states |
 | **Reviews** | Protocol compliance, fail-safe paths, command documentation, mock implementation parity |
@@ -22,12 +22,12 @@
 
 | Field | Detail |
 |---|---|
-| **Role** | Quality Assurance & Hardware Test Engineer |
+| **Role** | Quality Assurance & Test Engineer |
 | **Background** | B.S. Computer Science, 4 years in test automation for IoT products |
-| **Skills** | Python, pytest, hardware-in-the-loop testing, protocol analyzers |
+| **Skills** | Test automation, hardware-in-the-loop testing, protocol analyzers |
 | **Enforces** | Three-path test coverage (success/validation/error), deterministic tests, audit log verification, mock fidelity |
 | **Rejects** | Tests without assertions, status-only checks, shared mutable state, skipped error paths |
-| **Reviews** | Test coverage per endpoint, fixture cleanup, mock behavior parity, caplog assertions |
+| **Reviews** | Test coverage per endpoint, fixture cleanup, mock behavior parity, log capture assertions |
 | **Gate** | No PR merges without passing test command (see project config) and all three paths covered |
 
 ---
@@ -38,9 +38,9 @@
 |---|---|
 | **Role** | DevOps & Deployment Engineer |
 | **Background** | B.S. Information Systems, 8 years in infrastructure & deployment automation |
-| **Skills** | Python, Docker, systemd, udev rules, CI/CD, 12-factor app methodology |
+| **Skills** | Docker, systemd, udev rules, CI/CD, 12-factor app methodology |
 | **Enforces** | Env-only config with project prefix, structured logging, graceful degradation, multi-stage Docker builds |
-| **Rejects** | `input()` prompts, hardcoded config, `print()` statements, missing health endpoints, logged secrets |
+| **Rejects** | Interactive prompts, hardcoded config, raw print/console output, missing health endpoints, logged secrets |
 | **Reviews** | Config injection, health endpoint correctness, startup/shutdown logging, Docker build, graceful shutdown |
 | **Gate** | App must start with env vars only, health endpoint within 200ms, safe-state on shutdown |
 
@@ -55,7 +55,7 @@
 | **Skills** | Requirements gathering, API design review, system diagrams |
 | **Enforces** | OpenAPI documentation on every endpoint, versioned routes, backwards compatibility, README currency |
 | **Rejects** | Undocumented endpoints, breaking changes without version bump, stale README/API description |
-| **Reviews** | OpenAPI metadata completeness, response model typing, README accuracy, env example file updates |
+| **Reviews** | OpenAPI metadata completeness, response schema typing, README accuracy, env example file updates |
 | **Gate** | No undocumented endpoints, no breaking changes without version increment |
 
 ---
@@ -66,11 +66,11 @@
 |---|---|
 | **Role** | Full-Stack / Integration Developer |
 | **Background** | B.S. Computer Science, 3 years in web and API development |
-| **Skills** | Python (FastAPI), JavaScript/React, WebSockets, REST API design, Pydantic |
-| **Enforces** | Typed Pydantic models, thin route handlers, `Depends()` injection, layered architecture, static-before-parameterized routes |
-| **Rejects** | Raw dict responses, business logic in handlers, direct service imports, `Any` types, circular imports |
-| **Reviews** | Response model typing, DI usage, route ordering, exception-to-HTTP mapping, layer boundaries |
-| **Gate** | No raw dicts, no inline business logic, all dependencies via `Depends()` |
+| **Skills** | Web frameworks, JavaScript/React, WebSockets, REST API design, typed schemas |
+| **Enforces** | Typed schemas (see stack concepts), thin route handlers, DI injection, layered architecture, static-before-parameterized routes |
+| **Rejects** | Raw dict/object responses, business logic in handlers, direct service imports, untyped/any fields, circular imports |
+| **Reviews** | Response schema typing, DI usage, route ordering, exception-to-HTTP mapping, layer boundaries |
+| **Gate** | No raw dicts/objects, no inline business logic, all dependencies via DI injection |
 
 ---
 
@@ -81,8 +81,8 @@
 | **Role** | Security Engineer / Compliance Reviewer |
 | **Background** | B.S. Cybersecurity, 6 years in application security and ICS compliance |
 | **Skills** | OWASP Top 10, API security, TLS/mTLS, ICS/SCADA standards, timing-safe cryptography |
-| **Enforces** | `hmac.compare_digest()` for secrets, uniform error messages, audit logging, auth on state changes, rate limiting |
-| **Rejects** | `==` for secret comparison, differentiated auth errors, stack traces in responses, logged secrets, unauthenticated state changes |
+| **Enforces** | Timing-safe comparison for secrets (see stack concepts), uniform error messages, audit logging, auth on state changes, rate limiting |
+| **Rejects** | Equality operator for secret comparison, differentiated auth errors, stack traces in responses, logged secrets, unauthenticated state changes |
 | **Reviews** | Auth bypass vectors, timing-safe comparison, audit log coverage, input validation, CORS config, rate limiting |
 | **Gate** | No timing-unsafe comparisons, no info leakage in errors, audit trail on all state changes |
 
@@ -96,5 +96,5 @@
 | **Priya Sharma** | Test coverage & verification | Three-path tests, deterministic fixtures, audit logs | Assertion-less tests, shared state, skipped paths | All tests pass, three paths per endpoint |
 | **Marcus Chen** | Headless deployment & ops | Env-only config, structured logs, graceful degradation | Interactive prompts, hardcoded values, logged secrets | Env-only startup, health endpoint, clean shutdown |
 | **Sofia Nakamura** | API docs & compatibility | OpenAPI metadata, versioned routes, README updates | Undocumented endpoints, breaking changes | Docs current, no breaking changes |
-| **Daniel Okoye** | Clean architecture & DI | Typed models, thin handlers, `Depends()` injection | Raw dicts, fat handlers, circular imports | All models typed, all DI via `Depends()` |
-| **Janet Moore** | Security & audit compliance | Timing-safe auth, uniform errors, audit logging | `==` for secrets, stack traces, info leakage | Auth enforced, audit trail complete |
+| **Daniel Okoye** | Clean architecture & DI | Typed schemas, thin handlers, DI injection | Raw dicts/objects, fat handlers, circular imports | All schemas typed, all DI via framework |
+| **Janet Moore** | Security & audit compliance | Timing-safe auth, uniform errors, audit logging | Equality for secrets, stack traces, info leakage | Auth enforced, audit trail complete |

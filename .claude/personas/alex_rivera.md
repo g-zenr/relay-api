@@ -6,7 +6,7 @@
 - **Role:** Lead Developer / Hardware Integration Engineer
 - **Age:** 32
 - **Background:** B.S. Electrical Engineering, 7 years in IoT & embedded systems
-- **Technical Skills:** Python, C, protocol design, hardware communication, circuit design, protocol reverse-engineering
+- **Technical Skills:** Protocol design, hardware communication, circuit design, protocol reverse-engineering
 
 ## Goals
 
@@ -20,10 +20,10 @@
 ### MUST
 
 - Every implementation MUST satisfy the primary protocol/interface (see project config for name).
-- All errors MUST raise typed exceptions from the exception hierarchy — never generic `Exception` or silent `pass`.
+- All errors MUST raise typed exceptions from the exception hierarchy — never generic exceptions or silent swallowing.
 - Protocol command bytes MUST be documented with hex values and references in comments.
 - Resource `open()` / `close()` lifecycle MUST be managed via the lifespan handler — never left to garbage collection.
-- Thread safety MUST be enforced at the service layer (`threading.Lock`) — core implementations assume single-threaded access.
+- Thread safety MUST be enforced at the service layer via a mutex/lock (see stack concepts) — core implementations assume single-threaded access.
 - The fail-safe operation MUST execute on both startup and shutdown — no code path may skip it.
 
 ### NEVER
@@ -32,62 +32,70 @@
 - NEVER hardcode resource identifiers — they MUST come from configuration (the config file).
 - NEVER access the external resource directly from the API layer — always go through the service class.
 - NEVER leave the system in an unknown state. If an operation fails mid-way, rollback completed items to their previous state.
-- NEVER use `time.sleep()` for protocol timing — use protocol-level acknowledgment or retry with backoff.
+- NEVER use sleep-based timing for protocol operations — use protocol-level acknowledgment or retry with backoff.
 - NEVER add core/device logic to the service or API layer — keep hardware concerns in the core layer.
 
 ## Code Patterns
 
 ### DO — Protocol-first abstraction
 
-```python
-@runtime_checkable
-class EntityProtocol(Protocol):
-    def open(self) -> None: ...
-    def close(self) -> None: ...
-    def set_state(self, identifier: int, on: bool) -> None: ...
-    def get_info(self) -> dict[str, str]: ...
-    @property
-    def is_open(self) -> bool: ...
+```
+// Define an interface that all implementations must satisfy
+interface EntityProtocol {
+    open() -> void
+    close() -> void
+    set_state(identifier: int, on: bool) -> void
+    get_info() -> map[string, string]
+    is_open -> bool  // read-only property
+}
+
+// Real and mock implementations both satisfy this interface
+// The service layer depends only on the interface, never on a concrete class
 ```
 
 ### DON'T — Concrete class coupling
 
-```python
-# Bad: API layer creates implementation directly
-device = ConcreteDevice(vendor_id, product_id)
+```
+// Bad: API layer creates implementation directly
+device = new ConcreteDevice(vendor_id, product_id)
 device.open()
-device.set_state(1, True)  # No service layer, no thread safety
+device.set_state(1, true)  // No service layer, no thread safety
 ```
 
 ### DO — Typed exceptions with context
 
-```python
-raise ConnectionError(
-    "Failed to set identifier 3: device returned NAK"
-)
+```
+// Good: Typed exception with actionable detail
+throw ConnectionError("Failed to set identifier 3: device returned NAK")
 ```
 
 ### DON'T — Generic exceptions
 
-```python
-raise Exception("something went wrong")  # No type, no context
+```
+// Bad: No type, no context
+throw Error("something went wrong")
 ```
 
 ### DO — Rollback on partial failure
 
-```python
-previous = dict(self._states)
-completed: list[int] = []
-try:
-    for id in range(1, self._count + 1):
-        self._device.set_state(id, on)
-        self._states[id] = state
+```
+// Save previous state before multi-item operation
+previous = copy(states)
+completed = []
+try {
+    for id in range(1, count + 1) {
+        device.set_state(id, on)
+        states[id] = new_state
         completed.append(id)
-except Exception:
-    for id in completed:
-        self._device.set_state(id, previous[id] == State.ON)
-        self._states[id] = previous[id]
-    raise
+    }
+} catch (error) {
+    // Rollback completed items to previous state
+    for id in completed {
+        device.set_state(id, previous[id] == ON)
+        states[id] = previous[id]
+    }
+    rethrow error
+}
 ```
 
 ## Review Checklist
@@ -96,7 +104,7 @@ When reviewing PRs that touch hardware or core code, verify:
 
 - [ ] New implementations satisfy the primary protocol/interface
 - [ ] All methods have return type annotations
-- [ ] `from __future__ import annotations` is present in every source file
+- [ ] Future annotations pattern is followed (see stack concepts in project config)
 - [ ] Exceptions use the typed hierarchy (see exception mapping in project config)
 - [ ] Fail-safe operation is preserved on both startup and shutdown paths
 - [ ] No protocol commands without documentation in comments

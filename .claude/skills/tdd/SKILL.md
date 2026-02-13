@@ -21,19 +21,19 @@ Follow the red-green-refactor cycle strictly.
 ### Test Conventions
 - Class: `Test<Feature>`
 - Method: `test_<action>_<expected_outcome>`
-- Fixtures with `Generator` type hints and proper cleanup
-- `raise_server_exceptions=False` on TestClient
-- Audit log tests with `caplog` on the project's audit logger
+- Fixtures with proper type hints and cleanup
+- Test HTTP client configured for proper error testing (no automatic error propagation)
+- Audit log tests with log capture mechanism (see stack concepts) on the project's audit logger
 
 ## Phase 2 — GREEN: Minimal Implementation
 
 1. **Write the minimum code to make tests pass** — nothing more
 2. Follow project standards:
-   - `from __future__ import annotations`
+   - Future annotations pattern (see stack concepts)
    - Typed exceptions from the exception hierarchy
    - Thread safety in service layer
-   - Pydantic models for API shapes
-   - Thin route handlers with `Depends()` injection
+   - Typed schemas for API shapes (see stack concepts)
+   - Thin route handlers with DI injection (see stack concepts)
 3. **Run tests** — they MUST now pass
 
 ## Phase 3 — REFACTOR: Clean Up

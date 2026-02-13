@@ -14,10 +14,12 @@ Investigate and fix: $ARGUMENTS
 
 ## Step 2 — Reproduce
 Write a minimal test that triggers the error:
-```python
-def test_reproduces_issue(self, client: TestClient) -> None:
-    resp = client.<method>("<path>", ...)
-    # This should reproduce the error
+```
+// Write a test that triggers the error
+test_reproduces_issue(client) {
+    resp = client.<METHOD>("<path>", ...)
+    // This should reproduce the error — verify it fails
+}
 ```
 Run it to confirm it fails.
 

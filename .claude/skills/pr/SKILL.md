@@ -39,9 +39,9 @@ Use this structure:
 - [ ] Manual verification: <steps>
 
 ## Checklist
-- [ ] `from __future__ import annotations` in all new files
+- [ ] Future annotations pattern followed (see stack concepts)
 - [ ] Typed exceptions (no generic `Exception`)
-- [ ] Pydantic models for all request/response shapes
+- [ ] Typed schemas for all request/response shapes (see stack concepts)
 - [ ] OpenAPI metadata on all new endpoints
 - [ ] Project documentation updated (if new endpoints/config)
 - [ ] Env example file updated (if new settings)

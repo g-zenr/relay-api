@@ -16,9 +16,9 @@ This is a full-feature workflow that touches every layer. Follow the team's stan
 5. Present the plan before writing any code
 
 ## Phase 2 — Schema & Config (Daniel Okoye + Marcus Chen)
-1. Add any new Pydantic models to the models/schemas file
-   - Explicit types on every field — no `Any`
-   - Validators and constraints where applicable
+1. Add any new typed schemas (see stack concepts) to the models/schemas file
+   - Explicit types on every field — no untyped/any fields
+   - Validation constraints where applicable (see stack concepts)
 2. Add any new settings to the config file with the project's env prefix
 3. Document new settings in the env example file with description and default
 
@@ -41,20 +41,20 @@ This is a full-feature workflow that touches every layer. Follow the team's stan
    - Thin handlers — delegate to the service class
    - Auth-protected DI dependency for protected endpoints
    - Public DI dependency for unauthenticated endpoints
-   - Full OpenAPI metadata: `response_model`, `summary`, `description`, `responses`
+   - Full OpenAPI metadata: response schema, summary, description, responses (see stack concepts)
    - Static routes before parameterized routes
    - Map domain exceptions to HTTP status codes per project config
 
 ## Phase 6 — Security (Janet Moore)
 1. Verify new endpoints respect auth when API key is configured
 2. Verify error responses use the error response model — no stack traces or internals
-3. Verify input validation via Pydantic — no raw input trusted
-4. If handling secrets: use `hmac.compare_digest()`, never `==`
+3. Verify input validation via typed schemas (see stack concepts) — no raw input trusted
+4. If handling secrets: use timing-safe comparison (see stack concepts), never equality operator
 
 ## Phase 7 — Tests (Priya Sharma)
 1. Write tests for each new endpoint: success, validation error, device/service error
 2. Write tests for new service methods: happy path, edge cases, error conditions
-3. If state changes: test audit log output via `caplog`
+3. If state changes: test audit log output via log capture mechanism (see stack concepts)
 4. If multi-entity operations: test rollback on partial failure
 5. Add to corresponding test file (see test file mapping in project config)
 

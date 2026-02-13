@@ -32,10 +32,8 @@ If not already done, run `/audit` to identify all issues. Otherwise, work from t
 
 ## Step 3 — Fix Import Order
 Ensure imports follow this order in every file:
-1. `from __future__ import annotations`
-2. Standard library imports
-3. Third-party imports
-4. Local imports
+Follow the language-standard import ordering convention.
+If the project uses a future annotations pattern (see stack concepts), it goes first.
 
 ## Step 4 — Remove Stale Configuration
 - Check env example file for settings not in the config file

@@ -19,10 +19,10 @@ Follow Priya Sharma's testing standards:
 4. **Test conventions**:
    - Class names: `Test<Feature>`
    - Method names: `test_<action>_<expected_outcome>`
-   - Use `Generator[TestClient, None, None]` type hints on fixtures
-   - Use `raise_server_exceptions=False` on TestClient
-   - DI overrides via `app.dependency_overrides` with cleanup in teardown
-   - Audit log assertions via `caplog.at_level(logging.INFO, logger="<audit logger>")` (see project config for logger name)
+   - Use proper type hints on test fixtures
+   - Configure test HTTP client for proper error testing (no automatic error propagation)
+   - DI overrides (see stack concepts) with cleanup in teardown
+   - Audit log assertions via log capture mechanism (see stack concepts) at the correct logger level (see project config for logger name)
    - No `time.sleep()`, no shared mutable state, no execution order dependence
 
 5. **Edge cases to always consider**:
